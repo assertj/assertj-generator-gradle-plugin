@@ -1,5 +1,8 @@
 # assertj-generator-gradle-plugin
 
+[![Linux Build Status](https://travis-ci.org/Nava2/assertj-generator-gradle-plugin.svg?branch=master)](https://travis-ci.org/Nava2/assertj-generator-gradle-plugin)
+[![Windows Build status](https://ci.appveyor.com/api/projects/status/ia2ki6wprow9ysnl?svg=true)](https://ci.appveyor.com/project/Nava2/assertj-generator-gradle-plugin)
+
 This is the source for the Gradle plugin for the 
 [AssertJ Generator](http://joel-costigliola.github.io/assertj/assertj-assertions-generator.html). This plugin leverages
 existing Gradle [SourceSet](https://docs.gradle.org/current/dsl/org.gradle.api.tasks.SourceSet.html) API to make it 
