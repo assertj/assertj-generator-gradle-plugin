@@ -1,0 +1,46 @@
+/*
+ * Copyright 2017. assertj-generator-gradle-plugin contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+package org.assertj.generator.gradle
+
+/**
+ * Utilities used in test scripts
+ */
+class TestUtils {
+
+    /**
+     * Cleans up the boiler-plate while creating a build.gradle file applying the plugin
+     * @param file
+     * @param content
+     * @return
+     */
+    static def buildFile(File file, String content) {
+        file << """
+            // Add required plugins and source sets to the sub projects
+            plugins { id "net.navatwo.assertj.generator.gradle.plugin" } // Note must use this syntax
+            
+            ${content}
+            
+            repositories {
+                mavenCentral()
+            }
+            
+            dependencies {                
+                // https://mvnrepository.com/artifact/org.assertj/assertj-core
+                testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
+                
+                testCompile group: 'junit', name: 'junit', version: '4.12'
+            }
+        """.stripMargin()
+    }
+
+}
