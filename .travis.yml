@@ -12,3 +12,8 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
     - $HOME/.m2
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
