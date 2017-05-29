@@ -59,6 +59,16 @@ class SimpleBuild {
             }
             """.stripIndent()
 
+        File otherWorldJava = srcPackagePath.resolve('OtherWorld.java').toFile()
+
+        otherWorldJava << """
+            package org.example;
+            
+            public final class OtherWorld {
+                public boolean isBrainy = false;
+            }
+            """.stripIndent()
+
         File testDir = testProjectDir.newFolder('src', 'test', 'java')
 
         testDir.toPath().resolve(packagePath).toFile().mkdirs()
@@ -124,9 +134,34 @@ class SimpleBuild {
                 .withArguments('-i', '-s', 'test')
                 .build()
 
-        result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
-        result.task(':test').outcome == TaskOutcome.SUCCESS
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
+    }
+
+    @Test
+    void exclude_class() {
+
+        TestUtils.buildFile(buildFile, """
+            sourceSets {
+                main {
+                    assertJ {
+                        exclude '**/org/example/OtherWorld*'
+                    }
+                }
+            }
+        """)
+
+        def result = GradleRunner.create()
+                .withGradleVersion("3.5")
+                .withProjectDir(testProjectDir.root)
+                .withDebug(true)
+                .withPluginClasspath()
+                .withArguments('-i', '-s', 'test')
+                .build()
+
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':compileTestJava').outcome == TaskOutcome.SUCCESS
     }
 
 

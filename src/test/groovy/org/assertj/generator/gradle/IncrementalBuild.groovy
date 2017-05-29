@@ -114,8 +114,8 @@ class IncrementalBuild {
 
         def firstBuild = runner.build()
 
-        firstBuild.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
-        firstBuild.task(':test').outcome == TaskOutcome.SUCCESS
+        assert firstBuild.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert firstBuild.task(':test').outcome == TaskOutcome.SUCCESS
 
         // get files
         def times = assertFiles("main", true).collect {
@@ -123,8 +123,8 @@ class IncrementalBuild {
         }
 
         def secondBuild = runner.build()
-        secondBuild.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
-        secondBuild.task(':test').outcome == TaskOutcome.SUCCESS
+        assert secondBuild.task(':generateAssertJ').outcome == TaskOutcome.UP_TO_DATE
+        assert secondBuild.task(':test').outcome == TaskOutcome.UP_TO_DATE
 
         def newFiles = assertFiles("main", true)
 
@@ -152,8 +152,8 @@ class IncrementalBuild {
 
         def firstBuild = runner.build()
 
-        firstBuild.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
-        firstBuild.task(':test').outcome == TaskOutcome.SUCCESS
+        assert firstBuild.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert firstBuild.task(':test').outcome == TaskOutcome.SUCCESS
 
         // get files
         def files = assertFiles("main", true)
@@ -171,8 +171,11 @@ class IncrementalBuild {
         h1Java << "\n// some changed data"
 
         def secondBuild = runner.build()
-        secondBuild.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
-        secondBuild.task(':test').outcome == TaskOutcome.SUCCESS
+        // Make sure it did run
+        assert secondBuild.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+
+        // However, since we didn't actually change anything, there's nothing to test, thus UP_TO_DATE
+        assert secondBuild.task(':test').outcome == TaskOutcome.UP_TO_DATE
 
         assertFiles("main", true)
 

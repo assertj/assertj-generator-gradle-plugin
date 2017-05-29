@@ -18,8 +18,11 @@ import org.assertj.generator.gradle.tasks.AssertJGeneratorSourceSet
 import org.assertj.generator.gradle.tasks.config.AssertJGeneratorOptions
 import org.assertj.generator.gradle.tasks.config.EntryPointGeneratorOptions
 import org.assertj.generator.gradle.tasks.config.Templates
+import org.gradle.api.Action
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.SourceDirectorySetFactory
+import org.gradle.api.internal.tasks.DefaultSourceSet
+import org.gradle.api.tasks.SourceSet
 import org.gradle.util.ConfigureUtil
 
 /**
@@ -36,10 +39,10 @@ class DefaultAssertJGeneratorSourceSet extends DefaultAssertJGeneratorOptions im
 
     private final SourceDirectorySet assertJDirectorySet
 
-    DefaultAssertJGeneratorSourceSet(String name, SourceDirectorySetFactory sourceDirectorySetFactory) {
+    DefaultAssertJGeneratorSourceSet(SourceSet sourceSet, SourceDirectorySetFactory sourceDirectorySetFactory) {
         super()
-        this.name = name
-        this.assertJDirectorySet = sourceDirectorySetFactory.create(name + " AssertJ Sources")
+        this.name = sourceSet.name
+        this.assertJDirectorySet = sourceDirectorySetFactory.create("${((DefaultSourceSet)sourceSet).displayName} AssertJ Sources")
 
         // We default to the java directory
         assertJ.srcDirs = ["src/${name}/java"]
@@ -59,13 +62,24 @@ class DefaultAssertJGeneratorSourceSet extends DefaultAssertJGeneratorOptions im
     SourceDirectorySet getAssertJ() {
         assertJDirectorySet
     }
+    
+    
 
     @Override
     AssertJGeneratorSourceSet assertJ(Closure configureClosure) {
         // turn on the plugin
         this.skip = false
 
-        ConfigureUtil.configure(configureClosure, this)
+        ConfigureUtil.configure(configureClosure, assertJ)
+        this
+    }
+
+    @Override
+    AssertJGeneratorSourceSet assertJ(Action<? super SourceDirectorySet> action) {
+        // turn on for this source set
+        this.skip = false
+
+        action.execute(assertJ)
         this
     }
 
