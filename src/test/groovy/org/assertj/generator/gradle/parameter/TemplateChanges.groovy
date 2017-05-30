@@ -115,12 +115,13 @@ class TemplateChanges {
             }
         """)
 
-        def result = GradleRunner.create()
+        def runner = GradleRunner.create()
                 .withProjectDir(testProjectDir.root)
                 .withDebug(true)
                 .withPluginClasspath()
                 .withArguments('-i', '-s', 'test')
-                .build()
+
+        def result = runner.build()
 
         assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
         assert result.task(':test').outcome == TaskOutcome.SUCCESS
@@ -130,8 +131,111 @@ class TemplateChanges {
                 .resolve(packagePath)
                 .resolve("HelloWorldAssert.java")
 
+        assertThat(generatedAssert.text).contains('/* %%% foo %%% */')
+    }
+
+    @Test
+    void incremental_templates_with_no_changes() {
+
+        TestUtils.buildFile(buildFile, """
+            assertJ {
+                templates {
+                    wholeNumberAssertion = '${TEMPLATE_CONTENT}'
+                }              
+            }
+            
+            sourceSets {
+                main {
+                    assertJ { }
+                }
+            }
+        """)
+
+        def runner = GradleRunner.create()
+                .withProjectDir(testProjectDir.root)
+                .withDebug(true)
+                .withPluginClasspath()
+                .withArguments('-i', '-s', 'test')
+
+        def result = runner.build()
+
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':test').outcome == TaskOutcome.SUCCESS
+
+        Path generatedAssert = testProjectDir.root.toPath()
+                .resolve("build/generated-src/test/java")
+                .resolve(packagePath)
+                .resolve("HelloWorldAssert.java")
 
         assertThat(generatedAssert.text).contains('/* %%% foo %%% */')
+
+        def result2 = runner.build()
+
+        assert result2.task(':generateAssertJ').outcome == TaskOutcome.UP_TO_DATE
+        assert result2.task(':test').outcome == TaskOutcome.UP_TO_DATE
+
+        assertThat(generatedAssert.text).contains('/* %%% foo %%% */')
+    }
+
+    @Test
+    void incremental_templates_after_changes() {
+
+        TestUtils.buildFile(buildFile, """
+            assertJ {
+                templates {
+                    wholeNumberAssertion = '${TEMPLATE_CONTENT}'
+                }              
+            }
+            
+            sourceSets {
+                main {
+                    assertJ { }
+                }
+            }
+        """)
+
+        def runner = GradleRunner.create()
+                .withProjectDir(testProjectDir.root)
+                .withDebug(true)
+                .withPluginClasspath()
+                .withArguments('-i', '-s', 'test')
+
+        def result = runner.build()
+
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':test').outcome == TaskOutcome.SUCCESS
+
+        Path generatedAssert = testProjectDir.root.toPath()
+                .resolve("build/generated-src/test/java")
+                .resolve(packagePath)
+                .resolve("HelloWorldAssert.java")
+
+        assertThat(generatedAssert.text).contains('/* %%% foo %%% */')
+
+        // Now we update the content of the template assertion to make sure that the task is re-run
+
+        def NEW_TEMPLATE_CONTENT = '/* % NEW CONTENT % */'
+        buildFile.delete()
+        TestUtils.buildFile(buildFile, """
+            assertJ {
+                templates {
+                    wholeNumberAssertion = '${NEW_TEMPLATE_CONTENT}'
+                }              
+            }
+            
+            sourceSets {
+                main {
+                    assertJ { }
+                }
+            }
+        """)
+
+        def result2 = runner.build()
+
+        assert result2.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result2.task(':test').outcome == TaskOutcome.UP_TO_DATE // no test files!
+
+        assertThat(generatedAssert.text).contains(NEW_TEMPLATE_CONTENT)
     }
 
 }

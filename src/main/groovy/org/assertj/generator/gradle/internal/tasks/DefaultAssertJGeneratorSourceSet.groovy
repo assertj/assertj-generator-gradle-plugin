@@ -50,20 +50,10 @@ class DefaultAssertJGeneratorSourceSet extends DefaultAssertJGeneratorOptions im
         assertJ.include "**/*.java"
     }
 
-    private EntryPointGeneratorOptions getOrCreateEntryPoints() {
-        if (!this.entryPoints) {
-            this.entryPoints = new EntryPointGeneratorOptions()
-        }
-
-        this.entryPoints
-    }
-
     @Override
     SourceDirectorySet getAssertJ() {
         assertJDirectorySet
     }
-    
-    
 
     @Override
     AssertJGeneratorSourceSet assertJ(Closure configureClosure) {

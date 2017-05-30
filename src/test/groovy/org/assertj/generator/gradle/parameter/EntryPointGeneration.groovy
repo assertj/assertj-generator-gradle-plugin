@@ -181,4 +181,53 @@ class EntryPointGeneration {
         assertThat(otherPackageDir.resolve("BddAssertions.java")).exists()
     }
 
+    @Test
+    void change_entry_point_package_and_entry_points() {
+
+        TestUtils.buildFile(buildFile, """
+            assertJ { }
+
+            sourceSets {
+                main {
+                    assertJ {
+                        entryPoints {
+                            classPackage = 'org.other'
+                            only() // none others
+                            
+                            bdd = true
+                        }
+                    }
+                }
+            }
+        """)
+
+        def runner = GradleRunner.create()
+                .withProjectDir(testProjectDir.root)
+                .withDebug(true)
+                .withPluginClasspath()
+                .withArguments('-i', '-s', 'test')
+
+        def result = runner.build()
+
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':test').outcome == TaskOutcome.SUCCESS
+
+        Path generatedSrcDir = testProjectDir.root.toPath()
+                .resolve("build/generated-src/test/java")
+
+        Path generatedPackageDir = generatedSrcDir.resolve(packagePath)
+        Path otherPackageDir = generatedSrcDir.resolve("org/other/")
+
+        assertThat(generatedPackageDir.resolve("HelloWorldAssert.java")).exists()
+        assertThat(otherPackageDir.resolve("BddAssertions.java")).exists()
+
+        // Run it again, there may be issues with serialization
+        def result2 = runner.build()
+
+        assert result2.task(':generateAssertJ').outcome == TaskOutcome.UP_TO_DATE
+        assert result2.task(':test').outcome == TaskOutcome.UP_TO_DATE
+
+        assertThat(generatedPackageDir.resolve("HelloWorldAssert.java")).exists()
+        assertThat(otherPackageDir.resolve("BddAssertions.java")).exists()
+    }
 }

@@ -313,8 +313,8 @@ sourceSets {
 ## Task Provided
  
 * `generateAssertJ` - Generates all sources via the AssertJ Generator
-* `cleanAssertJ` - Cleans all generated files 
-  * TODO Not implemented
+* Cleaning is done via the `clean` as the input/output semantics are handled by Gradle's incremental compilation 
+  mechanics
 
 ### Lifecycle
 

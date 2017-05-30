@@ -25,8 +25,9 @@ import java.util.stream.Collectors
 @EqualsAndHashCode
 class EntryPointGeneratorOptions implements Iterable<AssertionsEntryPointType>, Serializable {
 
-    private final Set<AssertionsEntryPointType> entryPoints =
-            EnumSet.noneOf(AssertionsEntryPointType)
+    // Ideally, this should be final, however due to the way ObjectInputStream works we have to make it
+    // non-final and reassign it. The default initialization is never called :(
+    private Set<AssertionsEntryPointType> entryPoints = EnumSet.noneOf(AssertionsEntryPointType)
 
     /**
      * An optional package name for the Assertions entry point class. If omitted, the package will be determined
@@ -115,8 +116,8 @@ class EntryPointGeneratorOptions implements Iterable<AssertionsEntryPointType>, 
     }
 
     private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
-        entryPoints.clear()
-        entryPoints.addAll((Set<AssertionsEntryPointType>)s.readObject())
+        Set<AssertionsEntryPointType> typesFromStream = (Set<AssertionsEntryPointType>)s.readObject()
+        this.entryPoints = typesFromStream
 
         classPackage = (String) s.readObject()
     }

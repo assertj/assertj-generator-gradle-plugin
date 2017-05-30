@@ -33,12 +33,18 @@ import java.nio.file.Paths
 @EqualsAndHashCode @ToString
 class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Serializable {
 
-    boolean skip = true
-    Boolean hierarchical = null
-    final Templates templates = new Templates()
+    boolean skip
+    Boolean hierarchical
+    private Templates templates
     protected EntryPointGeneratorOptions _entryPoints
 
     protected String outputDir
+
+    DefaultAssertJGeneratorOptions() {
+        skip = true
+        hierarchical = null
+        templates = new Templates()
+    }
 
     Path getOutputDir(SourceSet sourceSet) {
         if (!outputDir) return null
@@ -69,6 +75,11 @@ class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Seriali
     }
 
     @Override
+    Templates getTemplates() {
+        this.templates
+    }
+
+    @Override
     void setHierarchical(boolean hierarchical) {
         this.hierarchical = hierarchical
     }
@@ -91,9 +102,17 @@ class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Seriali
         this._entryPoints
     }
 
+    protected EntryPointGeneratorOptions getOrCreateEntryPoints() {
+        if (!this.entryPoints) {
+            this.entryPoints = new EntryPointGeneratorOptions()
+        }
+
+        this.entryPoints
+    }
+
     @Override
     AssertJGeneratorOptions entryPoints(Closure closure) {
-        ConfigureUtil.configure(closure, _entryPoints)
+        ConfigureUtil.configure(closure, orCreateEntryPoints)
         this
     }
 
@@ -125,6 +144,14 @@ class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Seriali
         this.outputDir = (String)s.readObject()
         this.skip = s.readBoolean()
         this._entryPoints = (EntryPointGeneratorOptions)s.readObject()
-        templates.copyFrom((Templates)s.readObject())
+
+        Templates templatesFromIn = (Templates)s.readObject()
+        if (templatesFromIn) {
+            if (this.templates) {
+                this.templates.copyFrom(templatesFromIn)
+            } else {
+                this.templates = templatesFromIn
+            }
+        }
     }
 }
