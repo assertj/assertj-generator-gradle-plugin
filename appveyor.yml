@@ -14,10 +14,6 @@ cache:
   - C:\Users\appveyor\.gradle
   - C:\Users\appveyor\.m2
 
-branches:
-  only:
-  - master
-
 notifications:
   - provider: Email
     to:
