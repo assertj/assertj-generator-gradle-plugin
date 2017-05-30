@@ -28,7 +28,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 /**
  * Checks the behaviour of overriding globals in a project
  */
-class ConfigureGeneration {
+class EntryPointGeneration {
 
     @Rule
     public final TemporaryFolder testProjectDir = new TemporaryFolder()
@@ -141,6 +141,44 @@ class ConfigureGeneration {
             assertThat(generatedPackage.resolve(it)).exists()
         }
 
+    }
+
+    @Test
+    void change_entry_point_package() {
+
+        TestUtils.buildFile(buildFile, """
+            assertJ {
+                entryPoints {
+                    classPackage = 'org.other'
+                    only 'bdd'
+                }
+            }
+            
+            sourceSets {
+                main {
+                    assertJ { }
+                }
+            }
+        """)
+
+        def result = GradleRunner.create()
+                .withProjectDir(testProjectDir.root)
+                .withDebug(true)
+                .withPluginClasspath()
+                .withArguments('-i', '-s', 'test')
+                .build()
+
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':test').outcome == TaskOutcome.SUCCESS
+
+        Path generatedSrcDir = testProjectDir.root.toPath()
+                .resolve("build/generated-src/test/java")
+
+        Path generatedPackageDir = generatedSrcDir.resolve(packagePath)
+        Path otherPackageDir = generatedSrcDir.resolve("org/other/")
+
+        assertThat(generatedPackageDir.resolve("HelloWorldAssert.java")).exists()
+        assertThat(otherPackageDir.resolve("BddAssertions.java")).exists()
     }
 
 }

@@ -67,7 +67,7 @@ public interface AssertJGeneratorOptions {
      * @param values String values passed from a build script
      */
     default void setEntryPoints(Collection<String> values) {
-        getEntryPoints().setOnly(values.stream()
+        getEntryPoints().only(values.stream()
                 .map(String::toUpperCase)
                 .map(AssertionsEntryPointType::valueOf)
                 .collect(toList())
@@ -119,19 +119,6 @@ public interface AssertJGeneratorOptions {
      * @see #isHierarchical()
      */
     void setHierarchical(boolean hierarchical);
-
-    /**
-     * An optional package name for the Assertions entry point class. If omitted, the package will be determined
-     * heuristically from the generated assertions.
-     * @return Package string for entry point classes
-     */
-    String getEntryPointClassPackage();
-
-    /**
-     * Set the {@link #getEntryPointClassPackage() entryPointClassPackage} value
-     * @param entryPointClassPackage package to put entry points into
-     */
-    void setEntryPointClassPackage(String entryPointClassPackage);
 
     /**
      * Skip generating classes, handy way to disable temporarily.

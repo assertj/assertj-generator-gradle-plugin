@@ -293,6 +293,23 @@ sourceSets {
 }
 ```
 
+Or within the `entryPoints` closure:
+
+```gradle
+// For all source sets: 
+assertJ { }
+
+sourceSets {
+    main {
+        assertJ {
+            entryPoints {
+                only 'BDD', 'JUNIT_SOFT' // turn on _only_ BDD and JUnit Soft
+            }
+        }
+    }
+}
+```
+
 ## Task Provided
  
 * `generateAssertJ` - Generates all sources via the AssertJ Generator

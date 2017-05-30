@@ -153,7 +153,7 @@ class AssertJGenerationTask extends SourceTask {
                 for (AssertionsEntryPointType assertionsEntryPointType : assertJOptions.entryPoints) {
                     File assertionsEntryPointFile = generator.generateAssertionsEntryPointClassFor(classDescriptions,
                             assertionsEntryPointType,
-                            assertJOptions.entryPointClassPackage)
+                            assertJOptions.entryPoints.classPackage)
                     report.reportEntryPointGeneration(assertionsEntryPointType, assertionsEntryPointFile)
                 }
             }

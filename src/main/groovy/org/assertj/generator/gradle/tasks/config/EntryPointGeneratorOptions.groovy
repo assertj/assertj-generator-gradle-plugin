@@ -16,6 +16,8 @@ import com.google.common.collect.Iterators
 import groovy.transform.EqualsAndHashCode
 import org.assertj.assertions.generator.AssertionsEntryPointType
 
+import java.util.stream.Collectors
+
 /**
  * Used to represent the different {@link AssertionsEntryPointType} values in a simpler and more "gradle-like"
  * way when configuring.
@@ -25,6 +27,13 @@ class EntryPointGeneratorOptions implements Iterable<AssertionsEntryPointType>, 
 
     private final Set<AssertionsEntryPointType> entryPoints =
             EnumSet.noneOf(AssertionsEntryPointType)
+
+    /**
+     * An optional package name for the Assertions entry point class. If omitted, the package will be determined
+     * heuristically from the generated assertions.
+     * @return Package string for entry point classes
+     */
+    String classPackage
 
     @Override
     Iterator<AssertionsEntryPointType> iterator() {
@@ -39,12 +48,21 @@ class EntryPointGeneratorOptions implements Iterable<AssertionsEntryPointType>, 
         }
     }
 
-    void setOnly(AssertionsEntryPointType... rest) {
+    void only(AssertionsEntryPointType... rest) {
         entryPoints.clear()
 
         if (rest.length > 0) {
             entryPoints.addAll(EnumSet.copyOf(Arrays.asList(rest)))
         }
+    }
+
+    void only(String... rest) {
+        Set<AssertionsEntryPointType> asEnums = Arrays.stream(rest)
+            .map { it.toUpperCase() }
+            .map { AssertionsEntryPointType.valueOf(it) }
+            .collect(Collectors.toSet())
+
+        only(asEnums.toArray(new AssertionsEntryPointType[0]))
     }
 
     /**
@@ -93,10 +111,13 @@ class EntryPointGeneratorOptions implements Iterable<AssertionsEntryPointType>, 
 
     private void writeObject(ObjectOutputStream s) throws IOException {
         s.writeObject(entryPoints)
+        s.writeObject(classPackage)
     }
 
     private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
         entryPoints.clear()
         entryPoints.addAll((Set<AssertionsEntryPointType>)s.readObject())
+
+        classPackage = (String) s.readObject()
     }
 }

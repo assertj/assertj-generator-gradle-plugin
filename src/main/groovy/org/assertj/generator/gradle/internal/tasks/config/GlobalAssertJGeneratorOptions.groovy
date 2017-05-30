@@ -32,7 +32,7 @@ class GlobalAssertJGeneratorOptions extends DefaultAssertJGeneratorOptions imple
 
         // default entry points
         this._entryPoints = new EntryPointGeneratorOptions()
-        this._entryPoints.only = AssertionsEntryPointType.STANDARD
+        this._entryPoints.only(AssertionsEntryPointType.STANDARD)
     }
 
     @Override
@@ -47,16 +47,14 @@ class GlobalAssertJGeneratorOptions extends DefaultAssertJGeneratorOptions imple
     }
 
     private void writeObject(ObjectOutputStream s) throws IOException {
-        s.writeObject(outputDirRaw)
-        s.writeObject(entryPointClassPackage)
+        s.writeUTF(outputDirRaw)
         s.writeBoolean(skip)
         s.writeObject(this._entryPoints)
         s.writeObject(templates)
     }
 
     private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
-        this.outputDir = (File)s.readObject()
-        this.entryPointClassPackage = (String)s.readObject()
+        this.outputDir = s.readUTF()
         this.skip = s.readBoolean()
         this._entryPoints = (EntryPointGeneratorOptions)s.readObject()
         templates.copyFrom((Templates)s.readObject())

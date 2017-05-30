@@ -36,7 +36,6 @@ class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Seriali
     boolean skip = true
     Boolean hierarchical = null
     final Templates templates = new Templates()
-    String entryPointClassPackage
     protected EntryPointGeneratorOptions _entryPoints
 
     protected String outputDir
@@ -80,7 +79,7 @@ class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Seriali
     }
 
     void setEntryPoints(AssertionsEntryPointType... rest) {
-        this.entryPoints.setOnly(rest)
+        this.entryPoints.only(rest)
     }
 
     void setEntryPoints(EntryPointGeneratorOptions newValue) {
@@ -117,15 +116,13 @@ class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Seriali
 
     private void writeObject(ObjectOutputStream s) throws IOException {
         s.writeObject(outputDir)
-        s.writeObject(entryPointClassPackage)
         s.writeBoolean(skip)
         s.writeObject(_entryPoints)
         s.writeObject(templates)
     }
 
     private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
-        this.outputDir = (File)s.readObject()
-        this.entryPointClassPackage = (String)s.readObject()
+        this.outputDir = (String)s.readObject()
         this.skip = s.readBoolean()
         this._entryPoints = (EntryPointGeneratorOptions)s.readObject()
         templates.copyFrom((Templates)s.readObject())
