@@ -33,17 +33,13 @@ import java.nio.file.Paths
 @EqualsAndHashCode @ToString
 class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Serializable {
 
-    boolean skip
+    boolean skip = true
     Boolean hierarchical = null
     final Templates templates = new Templates()
     String entryPointClassPackage
     protected EntryPointGeneratorOptions _entryPoints
 
     protected String outputDir
-
-    DefaultAssertJGeneratorOptions() {
-        this.skip = true
-    }
 
     Path getOutputDir(SourceSet sourceSet) {
         if (!outputDir) return null

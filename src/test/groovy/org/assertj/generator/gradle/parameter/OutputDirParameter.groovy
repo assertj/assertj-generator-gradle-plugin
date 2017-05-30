@@ -84,8 +84,8 @@ class OutputDirParameter {
                 .withArguments('-i', '-s', 'test')
                 .build()
 
-        result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
-        result.task(':test').outcome == TaskOutcome.SUCCESS
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
         assertFiles("main", true)
     }
@@ -114,8 +114,8 @@ class OutputDirParameter {
                 .withArguments('-i', '-s', 'test')
                 .build()
 
-        result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
-        result.task(':test').outcome == TaskOutcome.SUCCESS
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
         assertFiles("main", true)
     }

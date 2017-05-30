@@ -31,7 +31,6 @@ import org.gradle.util.ConfigureUtil;
  */
 public interface AssertJGeneratorOptions {
 
-    String NAME = "assertJ";
     String SOURCE_SET_NAME_TAG = "${sourceSet.testName}";
 
     /**

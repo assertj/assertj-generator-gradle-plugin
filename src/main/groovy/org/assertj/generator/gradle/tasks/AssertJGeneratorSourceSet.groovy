@@ -12,14 +12,16 @@
  */
 package org.assertj.generator.gradle.tasks
 
-import org.assertj.generator.gradle.tasks.config.AssertJGeneratorOptions
+import org.gradle.api.Action
 import org.gradle.api.file.SourceDirectorySet
 
 /**
  * Source Set implementation used to allow definition within the JavaPlugin's
- * Source sets. This does not extends {@link org.gradle.api.tasks.SourceSet}.
+ * Source sets. This does not extend {@link org.gradle.api.tasks.SourceSet}.
  */
-interface AssertJGeneratorSourceSet extends AssertJGeneratorOptions {
+interface AssertJGeneratorSourceSet {
+
+    String NAME = "assertJ"
 
     /**
      * The name of this source set (e.g. main or test)
@@ -39,4 +41,6 @@ interface AssertJGeneratorSourceSet extends AssertJGeneratorOptions {
      * @return Umple source, never {@code null}
      */
     AssertJGeneratorSourceSet assertJ(Closure configureClosure)
+
+    AssertJGeneratorSourceSet assertJ(Action<? super SourceDirectorySet> action)
 }

@@ -90,11 +90,11 @@ class SkipParameter {
                 .withProjectDir(testProjectDir.root)
                 .withDebug(true)
                 .withPluginClasspath()
-                .withArguments('-i', '-s', 'test')
+                .withArguments('-i', '-s', 'build')
                 .build()
 
-        result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
-        result.task(':test').outcome == TaskOutcome.SUCCESS
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':build').outcome == TaskOutcome.SUCCESS
 
         assertFiles("main", false)
     }
@@ -120,8 +120,8 @@ class SkipParameter {
                 .withArguments('-i', '-s', 'test')
                 .build()
 
-        result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
-        result.task(':test').outcome == TaskOutcome.SUCCESS
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
         assertFiles("main", true)
     }

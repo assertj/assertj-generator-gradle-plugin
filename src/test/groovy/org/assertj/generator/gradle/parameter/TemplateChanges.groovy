@@ -12,6 +12,7 @@
  */
 package org.assertj.generator.gradle.parameter
 
+import org.assertj.generator.gradle.TestUtils
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Before
@@ -66,10 +67,7 @@ class TemplateChanges {
     @Test
     void change_default_template_from_sourceSet() {
 
-        buildFile << """
-            // Add required plugins and source sets to the sub projects
-            plugins { id "net.navatwo.assertj.generator.gradle.plugin" } // Note must use this syntax
-            
+        TestUtils.buildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ {
@@ -79,22 +77,7 @@ class TemplateChanges {
                     }
                 }
             }
-            
-            // add some classpath dependencies
-            repositories {
-                mavenCentral()
-            }
-                        
-            dependencies {
-                // https://mvnrepository.com/artifact/com.google.guava/guava
-                compile group: 'com.google.guava', name: 'guava', version: '20.0'
-                
-                // https://mvnrepository.com/artifact/org.assertj/assertj-core
-                testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
-                
-                testCompile group: 'junit', name: 'junit', version: '4.12'
-            }
-        """
+        """)
 
         def result = GradleRunner.create()
                 .withProjectDir(testProjectDir.root)
@@ -103,8 +86,8 @@ class TemplateChanges {
                 .withArguments('-i', '-s', 'test')
                 .build()
 
-        result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
-        result.task(':test').outcome == TaskOutcome.SUCCESS
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
         Path generatedAssert = testProjectDir.root.toPath()
                 .resolve("build/generated-src/test/java")
@@ -118,10 +101,7 @@ class TemplateChanges {
     @Test
     void change_default_template_from_global() {
 
-        buildFile << """
-            // Add required plugins and source sets to the sub projects
-            plugins { id "net.navatwo.assertj.generator.gradle.plugin" } // Note must use this syntax
-
+        TestUtils.buildFile(buildFile, """
             assertJ {
                 templates {
                     wholeNumberAssertion = '${TEMPLATE_CONTENT}'
@@ -133,22 +113,7 @@ class TemplateChanges {
                     assertJ { }
                 }
             }
-            
-            // add some classpath dependencies
-            repositories {
-                mavenCentral()
-            }
-                        
-            dependencies {
-                // https://mvnrepository.com/artifact/com.google.guava/guava
-                compile group: 'com.google.guava', name: 'guava', version: '20.0'
-                
-                // https://mvnrepository.com/artifact/org.assertj/assertj-core
-                testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
-                
-                testCompile group: 'junit', name: 'junit', version: '4.12'
-            }
-        """
+        """)
 
         def result = GradleRunner.create()
                 .withProjectDir(testProjectDir.root)
@@ -157,8 +122,8 @@ class TemplateChanges {
                 .withArguments('-i', '-s', 'test')
                 .build()
 
-        result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
-        result.task(':test').outcome == TaskOutcome.SUCCESS
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
         Path generatedAssert = testProjectDir.root.toPath()
                 .resolve("build/generated-src/test/java")

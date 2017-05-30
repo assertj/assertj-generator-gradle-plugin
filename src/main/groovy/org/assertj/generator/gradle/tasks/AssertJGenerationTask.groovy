@@ -20,13 +20,9 @@ import org.assertj.assertions.generator.description.converter.ClassToClassDescri
 import org.assertj.assertions.generator.util.ClassUtil
 import org.assertj.generator.gradle.internal.tasks.AssertionsGeneratorReport
 import org.assertj.generator.gradle.tasks.config.AssertJGeneratorOptions
-import org.gradle.api.DefaultTask
 import org.gradle.api.file.*
 import org.gradle.api.logging.Logging
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 
 import java.nio.file.Path
@@ -36,14 +32,11 @@ import static com.google.common.collect.Sets.newLinkedHashSet
 /**
  *
  */
-class AssertJGenerationTask extends DefaultTask {
+class AssertJGenerationTask extends SourceTask {
 
     private static final logger = Logging.getLogger(AssertJGenerationTask)
 
-    @InputFiles
-    SourceDirectorySet sourceDirectorySet
-
-    @InputFiles
+    @Classpath
     FileCollection generationClasspath
 
     @Input
@@ -51,6 +44,8 @@ class AssertJGenerationTask extends DefaultTask {
 
     @OutputDirectory
     File outputDir
+    
+    private SourceDirectorySet sourceDirectorySet
 
     void setOutputDir(Path newDir) {
         this.outputDir = project.buildDir.toPath()
@@ -68,9 +63,8 @@ class AssertJGenerationTask extends DefaultTask {
             return
         }
 
-        if (!inputs.incremental) {
-            project.delete(outputDir.listFiles())
-        }
+
+        Set<File> sourceFiles = sourceDirectorySet.files
 
         def classesToGenerate = []
         def classpathChanged = false
@@ -78,7 +72,7 @@ class AssertJGenerationTask extends DefaultTask {
             if (generationClasspath.contains(change.file)) {
                 // file is part of classpath
                 classpathChanged = true
-            } else if (sourceDirectorySet.contains(change.file)) {
+            } else if (sourceFiles.contains(change.file)) {
                 // source file changed
                 classesToGenerate += change.file
             }
@@ -92,9 +86,15 @@ class AssertJGenerationTask extends DefaultTask {
 //            }
         }
 
+
+        if (classpathChanged || !inputs.incremental) {
+            project.delete(outputDir.listFiles())
+            classesToGenerate = sourceFiles
+        }
+
         def classLoader = new URLClassLoader(generationClasspath.collect { it.toURI().toURL() } as URL[])
 
-        def inputClassNames = getClassNames(sourceDirectorySet)
+        def inputClassNames = getClassNames()
         def classes = ClassUtil.collectClasses(classLoader, inputClassNames.values().toArray(new String[0]))
 
         def inputClassesToFile = inputClassNames.collectEntries { file, classDef ->
@@ -163,7 +163,37 @@ class AssertJGenerationTask extends DefaultTask {
         logger.info(report.reportContent)
     }
 
-    private static def getClassNames(SourceDirectorySet sourceDirectorySet) {
+    /**
+     * Delegate for {@link #setSource(java.lang.Object)}
+     * 
+     * @param source
+     */
+    void setSource(FileTree source) {
+        setSource((Object) source)
+    }
+
+    @Override
+    void setSource(final Object source) {
+        super.setSource(source)
+        
+        if (source instanceof SourceDirectorySet) {
+            this.sourceDirectorySet = (SourceDirectorySet) source
+        }
+    }
+
+    /**
+     * Returns the source for this task, after the include and exclude patterns have been applied. Ignores source files which do not exist.
+     *
+     * @return The source.
+     */
+    // This method is here as the Gradle DSL generation can't handle properties with setters and getters in different classes.
+    @InputFiles
+    @SkipWhenEmpty
+    FileTree getSource() {
+        super.getSource()
+    }
+    
+    private def getClassNames() {
         Map<File, String> fullyQualifiedNames = new HashMap<>(sourceDirectorySet.files.size())
 
         for (DirectoryTree tree : sourceDirectorySet.srcDirTrees) {
@@ -175,7 +205,7 @@ class AssertJGenerationTask extends DefaultTask {
                 @Override
                 void visitFile(FileVisitDetails fileVisitDetails) {
                     Path file = root.relativize(fileVisitDetails.file.toPath())
-
+                    
                     // Remove the extension and replace the dir separator with dots
                     String outPath = file.toString()
                     outPath = outPath[0..<outPath.size() - ".java".size()]
