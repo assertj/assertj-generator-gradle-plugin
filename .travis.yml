@@ -16,6 +16,8 @@ cache:
 
 deploy:
   provider: script
+  # No need to rebuild all archives, let it do its thing.
+  skip_cleanup: true
   script: ./gradlew publishPlugins
   on:
     branch: master
