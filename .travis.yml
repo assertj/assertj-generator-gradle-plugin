@@ -3,9 +3,10 @@ language: groovy
 jdk:
   - oraclejdk8
 
-install:
-#  Just in case..
-  - chmod +x ./gradlew
+before_install:
+  # Windows development makes it hard to keep this in git.
+  - chmox +x ./gradlew
+
 
 cache:
   directories:
@@ -13,9 +14,11 @@ cache:
     - $HOME/.gradle/wrapper/
     - $HOME/.m2
 
-branches:
-  only:
-  - master
+deploy:
+  provider: script
+  script: ./gradlew publishPlugins
+  on:
+    branch: master
 
 notifications:
   email:
