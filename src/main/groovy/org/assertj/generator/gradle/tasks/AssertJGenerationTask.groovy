@@ -26,6 +26,7 @@ import org.gradle.api.tasks.*
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 
 import java.nio.file.Path
+import java.nio.file.Paths
 
 import static com.google.common.collect.Sets.newLinkedHashSet
 
@@ -206,13 +207,17 @@ class AssertJGenerationTask extends SourceTask {
                 @Override
                 void visitFile(FileVisitDetails fileVisitDetails) {
                     Path file = root.relativize(fileVisitDetails.file.toPath())
-                    
-                    // Remove the extension and replace the dir separator with dots
-                    String outPath = file.toString()
-                    outPath = outPath[0..<outPath.size() - ".java".size()]
-                    outPath = outPath.replace(File.separatorChar, '.' as char)
 
-                    fullyQualifiedNames[fileVisitDetails.file] = outPath
+                    if (file.fileName != Paths.get("package-info.java")) {
+                        // Ignore package-info.java, it's not supposed to be included..
+
+                        // Remove the extension and replace the dir separator with dots
+                        String outPath = file.toString()
+                        outPath = outPath[0..<outPath.size() - ".java".size()]
+                        outPath = outPath.replace(File.separatorChar, '.' as char)
+
+                        fullyQualifiedNames[fileVisitDetails.file] = outPath
+                    }
                 }
             })
         }
