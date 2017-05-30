@@ -5,7 +5,7 @@ jdk:
 
 before_install:
   # Windows development makes it hard to keep this in git.
-  - chmox +x ./gradlew
+  - chmod +x ./gradlew
 
 
 cache:
