@@ -1,6 +1,6 @@
 
-group 'net.navatwo.org.assertj'
-version '2.0.0-SNAPSHOT'
+group 'org.assertj'
+version '0.0.2-SNAPSHOT'
 
 apply plugin: 'groovy'
 apply plugin: 'idea'
@@ -22,7 +22,7 @@ pluginBundle {
 
     plugins {
         assertJGeneratorPlugin {
-            id = 'net.navatwo.assertj.generator.gradle.plugin'
+            id = 'org.assertj.generator.gradle.plugin'
             displayName = 'AssertJ Generator Plugin'
         }
     }
@@ -58,7 +58,7 @@ tasks.publishPlugins.dependsOn tasks.setupPluginUpload
 gradlePlugin {
     plugins {
         assertJGeneratorPlugin {
-            id = "net.navatwo.assertj.generator.gradle.plugin"
+            id = "org.assertj.generator.gradle.plugin"
             implementationClass = "org.assertj.generator.gradle.AssertJGeneratorGradlePlugin"
         }
     }

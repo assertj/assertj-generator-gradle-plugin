@@ -20,7 +20,7 @@ deploy:
   skip_cleanup: true
   script: ./gradlew publishPlugins
   on:
-    branch: master
+    tags: true
 
 notifications:
   email:

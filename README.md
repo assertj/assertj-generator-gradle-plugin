@@ -3,7 +3,7 @@
 [![Linux Build Status](https://travis-ci.org/Nava2/assertj-generator-gradle-plugin.svg?branch=master)](https://travis-ci.org/Nava2/assertj-generator-gradle-plugin)
 [![Windows status](https://ci.appveyor.com/api/projects/status/ia2ki6wprow9ysnl/branch/master?svg=true)](https://ci.appveyor.com/project/Nava2/assertj-generator-gradle-plugin/branch/master)
 
-[Gradle Plugin Portal](https://plugins.gradle.org/plugin/net.navatwo.assertj.generator.gradle.plugin)
+[Gradle Plugin Portal](https://plugins.gradle.org/plugin/org.assertj.generator.gradle.plugin)
 
 This is the source for the Gradle plugin for the 
 [AssertJ Generator](http://joel-costigliola.github.io/assertj/assertj-assertions-generator.html). This plugin leverages
@@ -20,7 +20,7 @@ assertion generated for it. All of these will be placed into the highest package
 ```gradle
 plugins { 
     // version matches the version for assertj-generator
-    id 'net.navatwo.assertj.generator.gradle.plugin' version '1.0.0' 
+    id 'org.assertj.generator.gradle.plugin' version '1.0.0' 
 } 
 
 sourceSets {

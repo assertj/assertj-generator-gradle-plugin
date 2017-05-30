@@ -26,7 +26,7 @@ class TestUtils {
     static def buildFile(File file, String content) {
         file << """
             // Add required plugins and source sets to the sub projects
-            plugins { id "net.navatwo.assertj.generator.gradle.plugin" } // Note must use this syntax
+            plugins { id "org.assertj.generator.gradle.plugin" } // Note must use this syntax
             
             ${content}
             
