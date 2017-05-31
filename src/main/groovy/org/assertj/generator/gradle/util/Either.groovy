@@ -1,7 +1,11 @@
 package org.assertj.generator.gradle.util
 
 import com.google.common.base.Preconditions
+import com.google.common.reflect.TypeToken
+import org.codehaus.groovy.control.ConfigurationException
 import org.gradle.api.Action
+
+import java.lang.reflect.Field
 
 /**
  * Represents a type that is either one value or another of types {@code L} and {@code R}
@@ -161,5 +165,93 @@ abstract class Either<L, R> implements Serializable {
         }
     }
 
-    
+    /**
+     * Mixin used for sharing common behaviour regarding Either properties
+     */
+    trait EitherPropertyMixin {
+
+        /**
+         * Override the `setProperty()` so that we can assign either side of an "Either" type
+         */
+        void setProperty(String name, Object value) {
+            def prop
+            try {
+                prop = this.metaClass.getMetaProperty(name)
+            } catch (MissingPropertyException ignore) {
+                throw new ConfigurationException("Property with name ${name} does not exist for ${this.metaClass.class}, check spelling.")
+            }
+
+            if (prop && value && Either.class.isAssignableFrom(prop.type)) {
+                // handle the either type
+                TypeToken<?> base = TypeToken.of(getClass())
+
+                Field field = base.getRawType().getDeclaredField(prop.name)
+                Preconditions.checkNotNull(field, "Property name is wrong? %s", prop)
+
+                def eitherToken = base.resolveType(field.genericType)
+                def leftToken = eitherToken.resolveType(Either.class.typeParameters[0])
+                def rightToken = eitherToken.resolveType(Either.class.typeParameters[1])
+
+                if (leftToken.isSupertypeOf(value.class)) {
+                    // it's a "left"
+                    // IntelliJ is WRONG with this inspection, due to being a mixin it needs FQN
+                    //noinspection UnnecessaryQualifiedReference
+                    this.metaClass.setProperty(this, name, Either.left(value))
+                } else if (rightToken.isSupertypeOf(value.class)) {
+                    // IntelliJ is WRONG with this inspection, due to being a mixin it needs FQN
+                    //noinspection UnnecessaryQualifiedReference 
+                    this.metaClass.setProperty(this, name, Either.right(value))
+                } else {
+                    throw new ClassCastException(String.format("Can not assign type into %s %s", value.class, prop.class))
+                }
+            } else {
+                this.metaClass.setProperty(this, name, value)
+            }
+        }
+
+        /**
+         * Traverse across all properties extracting the {@link Either} types that have the correct "left" type and the
+         * value associated. 
+         *
+         * @param leftClazz Type of the left parameter to extract
+         * @return Possibly empty list of values
+         */
+        def <L> List<L> getLeftProperties(Class<L> leftClazz) {
+            TypeToken<? extends EitherPropertyMixin> base = (TypeToken<? extends EitherPropertyMixin>)TypeToken.of(getClass())
+
+            this.metaClass.properties.findAll { prop -> Either.class.isAssignableFrom(prop.type) }
+                    .findAll { prop ->
+                Field f = base.rawType.getDeclaredField(prop.name)
+                def leftToken = base.resolveType(f.genericType).resolveType(Either.class.typeParameters[0])
+                leftToken.isSubtypeOf(leftClazz)
+            }
+            .collect { (Either<L, ?>)this.metaClass.getProperty(this, it.name) }
+            .findAll { it && it.leftValue }
+            .collect { v -> v.left }
+        }
+
+
+        /**
+         * Traverse across all properties extracting the {@link Either} types that have the correct "right" type and the
+         * value associated. 
+         *
+         * @param leftClazz Type of the right parameter to extract
+         * @return Possibly empty list of values
+         */
+        def <R> List<R> getRightProperties(Class<R> value) {
+            TypeToken<? extends EitherPropertyMixin> base = (TypeToken<? extends EitherPropertyMixin>)TypeToken.of(getClass())
+
+            metaClass.properties.findAll { prop -> Either.class.isAssignableFrom(prop.type) }
+                    .findAll { prop ->
+                Field f = base.rawType.getDeclaredField(prop.name)
+                def rightToken = base.resolveType(f.genericType).resolveType(Either.class.typeParameters[1])
+                value.isAssignableFrom(rightToken.rawType)
+            }
+            .collect { (Either<?, R>)this.metaClass.getProperty(this, it.name) }
+            .findAll { it && it.rightValue }
+            .collect { v -> v.right }
+        }
+    }
+
+
 }

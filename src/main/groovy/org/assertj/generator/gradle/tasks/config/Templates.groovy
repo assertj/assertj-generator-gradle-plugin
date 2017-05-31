@@ -12,40 +12,52 @@
  */
 package org.assertj.generator.gradle.tasks.config
 
-import com.google.common.base.Preconditions
-import com.google.common.reflect.TypeToken
 import groovy.transform.EqualsAndHashCode
 import org.apache.commons.lang3.CharEncoding
 import org.assertj.assertions.generator.Template
 import org.assertj.core.util.Files
-import org.assertj.core.util.VisibleForTesting
 import org.assertj.generator.gradle.internal.tasks.AssertionsGeneratorReport
 import org.assertj.generator.gradle.util.Either
-import org.codehaus.groovy.control.ConfigurationException
 import org.gradle.api.Action
-
-import java.lang.reflect.Field
 
 import static org.assertj.assertions.generator.Template.Type.*
 
+/**
+ * Configuration for templates that work with the generator
+ */
 @EqualsAndHashCode
 class Templates implements Serializable {
 
+    /**
+     * Root directory for templates
+     */
     File dir
 
-    AssertionTemplates assertions = new AssertionTemplates()
+    /**
+     * Class-level templates. 
+     * 
+     * @see ClassTemplates
+     */
+    ClassTemplates classes = new ClassTemplates()
     
-    def assertions(Action<? extends AssertionTemplates> action) {
-        action.execute(assertions)
+    def classes(Action<? extends ClassTemplates> action) {
+        action.execute(classes)
         this
     }
 
-    def assertions(Closure closure) {
-        closure.delegate = assertions
+    def classes(Closure closure) {
+        // DO NOT USE ConfigureUtil.configure() it will not allow us to override the `setProperty()` method via the
+        // mixin. 
+        closure.delegate = this.classes
         closure.run()
         this
     }
-    
+
+    /**
+     * Method-level templates. 
+     *
+     * @see MethodTemplates
+     */
     MethodTemplates methods = new MethodTemplates()
     
     def methods(Action<? extends MethodTemplates> action) {
@@ -54,25 +66,40 @@ class Templates implements Serializable {
     }
 
     def methods(Closure closure) {
-        closure.delegate = methods 
+        // DO NOT USE ConfigureUtil.configure() it will not allow us to override the `setProperty()` method via the
+        // mixin. 
+        closure.delegate = this.methods
         closure.run()
         this
     }
-    
+
+    /**
+     * Entry-Point templates. 
+     *
+     * @see EntryPointTemplates
+     */
     EntryPointTemplates entryPoints = new EntryPointTemplates()
+    
     def entryPoints(Action<? extends EntryPointTemplates> action) {
         action.execute(entryPoints)
         this
     }
 
     def entryPoints(Closure closure) {
-        closure.delegate = entryPoints
+        
+        // DO NOT USE ConfigureUtil.configure() it will not allow us to override the `setProperty()` method via the
+        // mixin. 
+        closure.delegate = this.entryPoints
         closure.run()
         this
     }
     
     private final List<TemplateHandler> handlers
-    
+
+    /**
+     * Gets all files associated with templates. This is used for building up dependencies. 
+     * @return Possibly empty List of files
+     */
     def getFiles() {
         List<File> files = handlers.collect { it.files }.flatten() as List<File>
             
@@ -89,16 +116,15 @@ class Templates implements Serializable {
     
     Templates() {
         handlers = new ArrayList<>(3)
-        handlers.add(assertions)
+        handlers.add(classes)
         handlers.add(methods)
         handlers.add(entryPoints)
     }
-    
-    // assertion class templates
-    // assertion method templates
-    // entry point templates
-    
 
+    /**
+     * Does a shallow copy of the fields from {@code other} into {@code this}
+     * @param other
+     */
     void copyFrom(Templates other) {
         this.dir = other.dir
         
@@ -113,6 +139,10 @@ class Templates implements Serializable {
         }
     }
 
+    /**
+     * Defaults all the values in {@code defaults} into {@code this}
+     * @param defaults Default values
+     */
     void defaults(Templates defaults) {
         if (!this.dir) {
             this.dir = defaults.dir
@@ -126,6 +156,11 @@ class Templates implements Serializable {
             }
     }
 
+    /**
+     * Loads all the templates from the inner configurations and reports the status as it progresses. 
+     * @param report
+     * @return All templates overridden. 
+     */
     List<Template> getTemplates(AssertionsGeneratorReport report) {
         // resolve user templates directory
         if (dir == null) dir = new File(".")
@@ -137,8 +172,7 @@ class Templates implements Serializable {
         return userTemplates
     }
 
-    @VisibleForTesting
-    void loadUserTemplate(Either<File, String> userTemplate, Template.Type type, String templateDescription,
+    private void loadUserTemplate(Either<File, String> userTemplate, Template.Type type, String templateDescription,
                           List<Template> userTemplates, AssertionsGeneratorReport report) {
         if (userTemplate) {
             try {
@@ -164,71 +198,12 @@ class Templates implements Serializable {
             }
         }
     }
-
-    private trait EitherHandler {
-        
-        void setProperty(String name, Object value) {
-            def prop
-            try {
-                 prop = this.metaClass.getMetaProperty(name)
-            } catch (MissingPropertyException ignore) {
-                throw new ConfigurationException("Property with name ${name} does not exist for ${this.metaClass.class}, check spelling.")
-            }
-
-            if (prop && value && Either.class.isAssignableFrom(prop.type)) {
-                // handle the either type
-                TypeToken<?> base = TypeToken.of(getClass())
-                
-                Field field = base.getRawType().getDeclaredField(prop.name)
-                Preconditions.checkNotNull(field, "Property name is wrong? %s", prop)
-
-                def eitherToken = base.resolveType(field.genericType)
-                def leftToken = eitherToken.resolveType(Either.class.typeParameters[0])
-                def rightToken = eitherToken.resolveType(Either.class.typeParameters[1])
-
-                if (leftToken.isSupertypeOf(value.class)) {
-                    // it's a "left"
-                    this.metaClass.setProperty(this, name, Either.left(value))
-                } else if (rightToken.isSupertypeOf(value.class)) {
-                    this.metaClass.setProperty(this, name, Either.right(value))
-                } else {
-                    throw new ClassCastException(String.format("Can not assign type into %s %s", value.class, prop.class))
-                }
-            } else {
-                this.metaClass.setProperty(this, name, value)
-            }
-        }
-
-        def <L> List<L> getLeftProperties(Class<L> leftClazz) {
-            TypeToken<? extends EitherHandler> base = (TypeToken<? extends EitherHandler>)TypeToken.of(getClass())
-            
-            this.metaClass.properties.findAll { prop -> Either.class.isAssignableFrom(prop.type) }
-                .findAll { prop ->
-                    Field f = base.rawType.getDeclaredField(prop.name)
-                    def leftToken = base.resolveType(f.genericType).resolveType(Either.class.typeParameters[0])
-                    leftToken.isSubtypeOf(leftClazz)
-                }
-                .collect { (Either<L, ?>)this.metaClass.getProperty(this, it.name) }
-                .findAll { it && it.leftValue }
-                .collect { v -> v.left }
-        }
-
-        def <R> List<R> getRightProperties(Class<R> value) {
-            TypeToken<? extends EitherHandler> base = (TypeToken<? extends EitherHandler>)TypeToken.of(getClass())
-
-            metaClass.properties.findAll { prop -> Either.class.isAssignableFrom(prop.type) }
-                    .findAll { prop ->
-                        Field f = base.rawType.getDeclaredField(prop.name)
-                        def rightToken = base.resolveType(f.genericType).resolveType(Either.class.typeParameters[1])
-                        value.isAssignableFrom(rightToken.rawType)
-                    }
-                    .collect { (Either<?, R>)this.metaClass.getProperty(this, it.name) }
-                    .findAll { it && it.rightValue }
-                    .collect { v -> v.right }
-        }
-    }
-
-    private abstract class TemplateHandler<T extends TemplateHandler<T>> implements EitherHandler {
+    
+    /**
+     * Used to reuse some information within the template "categories"
+     * @param <T> CRTP
+     */
+    private abstract class TemplateHandler<T extends TemplateHandler<T>> implements Either.EitherPropertyMixin {
         abstract def getTemplates(List<Template> userTemplates, AssertionsGeneratorReport report)
         
         List<File> getFiles() {
@@ -272,8 +247,11 @@ class Templates implements Serializable {
 
     }
 
+    /**
+     * Class-level templates
+     */
     @EqualsAndHashCode
-    class AssertionTemplates extends TemplateHandler<AssertionTemplates> implements Serializable {
+    class ClassTemplates extends TemplateHandler<ClassTemplates> implements Serializable {
 
         Either<File, String> assertionClass
         Either<File, String> hierarchicalConcrete
@@ -289,6 +267,9 @@ class Templates implements Serializable {
         }
     }
 
+    /**
+     * Method-level templates
+     */
     @EqualsAndHashCode
     class MethodTemplates extends TemplateHandler<MethodTemplates> implements Serializable {
 
@@ -328,14 +309,18 @@ class Templates implements Serializable {
         }
     }
 
+
+    /**
+     * Entry point templates
+     */
     @EqualsAndHashCode
     class EntryPointTemplates extends TemplateHandler<EntryPointTemplates> implements Serializable {
 
         Either<File, String> assertions
         Either<File, String> assertionMethod
         Either<File, String> soft
-        Either<File, String> junitSoft
         Either<File, String> softMethod
+        Either<File, String> junitSoft
         Either<File, String> bdd
         Either<File, String> bddMethod
 
@@ -354,10 +339,11 @@ class Templates implements Serializable {
         
     }
     
+    // Serialization code: 
+    
     private void writeObject(ObjectOutputStream s) throws IOException {
-        
         s.writeObject(dir)
-        assertions.writeOutputStream(s)
+        classes.writeOutputStream(s)
         entryPoints.writeOutputStream(s)
         methods.writeOutputStream(s)
     }
@@ -365,8 +351,12 @@ class Templates implements Serializable {
     private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
         dir = s.readObject() as File
 
-        assertions = new AssertionTemplates()
-        assertions.fromInputStream(s)
+        // This awkward pattern is because the constructor is not called
+        // when deserialization occurs. This could be solved with forced reflection-based
+        // assignment, but that's asking for trouble..
+        
+        classes = new ClassTemplates()
+        classes.fromInputStream(s)
         entryPoints = new EntryPointTemplates()
         entryPoints.fromInputStream(s)
         methods = new MethodTemplates()
