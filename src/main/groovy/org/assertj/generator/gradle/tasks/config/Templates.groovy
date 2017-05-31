@@ -12,142 +12,118 @@
  */
 package org.assertj.generator.gradle.tasks.config
 
+import com.google.common.base.Preconditions
+import com.google.common.reflect.TypeToken
 import groovy.transform.EqualsAndHashCode
 import org.apache.commons.lang3.CharEncoding
 import org.assertj.assertions.generator.Template
 import org.assertj.core.util.Files
 import org.assertj.core.util.VisibleForTesting
 import org.assertj.generator.gradle.internal.tasks.AssertionsGeneratorReport
+import org.assertj.generator.gradle.util.Either
+import org.codehaus.groovy.control.ConfigurationException
+import org.gradle.api.Action
+
+import java.lang.reflect.Field
 
 import static org.assertj.assertions.generator.Template.Type.*
 
 @EqualsAndHashCode
 class Templates implements Serializable {
 
-    public File dir
+    File dir
+
+    AssertionTemplates assertions = new AssertionTemplates()
+    
+    def assertions(Action<? extends AssertionTemplates> action) {
+        action.execute(assertions)
+        this
+    }
+
+    def assertions(Closure closure) {
+        closure.delegate = assertions
+        closure.run()
+        this
+    }
+    
+    MethodTemplates methods = new MethodTemplates()
+    
+    def methods(Action<? extends MethodTemplates> action) {
+        action.execute(methods)
+        this
+    }
+
+    def methods(Closure closure) {
+        closure.delegate = methods 
+        closure.run()
+        this
+    }
+    
+    EntryPointTemplates entryPoints = new EntryPointTemplates()
+    def entryPoints(Action<? extends EntryPointTemplates> action) {
+        action.execute(entryPoints)
+        this
+    }
+
+    def entryPoints(Closure closure) {
+        closure.delegate = entryPoints
+        closure.run()
+        this
+    }
+    
+    private final List<TemplateHandler> handlers
+    
+    def getFiles() {
+        List<File> files = handlers.collect { it.files }.flatten() as List<File>
+            
+        if (dir) {
+            // resolve all of them if there is a directory
+            def dirPath = dir.toPath()
+            files = files.collect {
+                dirPath.resolve(it.toPath()).toFile()
+            }
+        }
+        
+        files
+    }
+    
+    Templates() {
+        handlers = new ArrayList<>(3)
+        handlers.add(assertions)
+        handlers.add(methods)
+        handlers.add(entryPoints)
+    }
+    
     // assertion class templates
-    public String assertionClass
-    public String hierarchicalAssertionConcreteClass
-    public String hierarchicalAssertionAbstractClass
     // assertion method templates
-    public String objectAssertion
-    public String booleanAssertion
-    public String booleanWrapperAssertion
-    public String arrayAssertion
-    public String iterableAssertion
-    public String charAssertion
-    public String characterAssertion
-    public String realNumberAssertion
-    public String realNumberWrapperAssertion
-    public String wholeNumberAssertion
-    public String wholeNumberWrapperAssertion
     // entry point templates
-    public String assertionsEntryPointClass
-    public String assertionEntryPointMethod
-    public String softEntryPointAssertionClass
-    public String junitSoftEntryPointAssertionClass
-    public String softEntryPointAssertionMethod
-    public String bddEntryPointAssertionClass
-    public String bddEntryPointAssertionMethod
+    
 
     void copyFrom(Templates other) {
         this.dir = other.dir
-        // assertion class templates
-        this.assertionClass = other.assertionClass
-        this.hierarchicalAssertionConcreteClass = other.hierarchicalAssertionConcreteClass
-        this.hierarchicalAssertionAbstractClass = other.hierarchicalAssertionAbstractClass
-        // assertion method templates
-        this.objectAssertion = other.objectAssertion
-        this.booleanAssertion = other.booleanAssertion
-        this.booleanWrapperAssertion = other.booleanWrapperAssertion
-        this.arrayAssertion = other.arrayAssertion
-        this.iterableAssertion = other.iterableAssertion
-        this.charAssertion = other.charAssertion
-        this.characterAssertion = other.characterAssertion
-        this.realNumberAssertion = other.realNumberAssertion
-        this.realNumberWrapperAssertion = other.realNumberWrapperAssertion
-        this.wholeNumberAssertion = other.wholeNumberAssertion
-        this.wholeNumberWrapperAssertion = other.wholeNumberWrapperAssertion
-        // entry point templates
-        this.assertionsEntryPointClass = other.assertionsEntryPointClass
-        this.assertionEntryPointMethod = other.assertionEntryPointMethod
-        this.softEntryPointAssertionClass = other.softEntryPointAssertionClass
-        this.junitSoftEntryPointAssertionClass = other.junitSoftEntryPointAssertionClass
-        this.softEntryPointAssertionMethod = other.softEntryPointAssertionMethod
-        this.bddEntryPointAssertionClass = other.bddEntryPointAssertionClass
-        this.bddEntryPointAssertionMethod = other.bddEntryPointAssertionMethod
+        
+        // Directly copy all the property values for the handlers
+        handlers.each { handler ->
+            handler.metaClass.properties.each { prop ->
+                def fromOther = prop.getProperty(other)
+                if (fromOther) {
+                    prop.setProperty(this, fromOther)
+                }
+            }
+        }
     }
 
     void defaults(Templates defaults) {
         if (!this.dir) {
             this.dir = defaults.dir
         }
-        // assertion class templates
-        if (!this.assertionClass) {
-            this.assertionClass = defaults.assertionClass
-        }
-        if (!this.hierarchicalAssertionConcreteClass) {
-            this.hierarchicalAssertionConcreteClass = defaults.hierarchicalAssertionConcreteClass
-        }
-        if (!this.hierarchicalAssertionAbstractClass) {
-            this.hierarchicalAssertionAbstractClass = defaults.hierarchicalAssertionAbstractClass
-        }
-        // assertion method templates
-        if (!this.objectAssertion) {
-            this.objectAssertion = defaults.objectAssertion
-        }
-        if (!this.booleanAssertion) {
-            this.booleanAssertion = defaults.booleanAssertion
-        }
-        if (!this.booleanWrapperAssertion) {
-            this.booleanWrapperAssertion = defaults.booleanWrapperAssertion
-        }
-        if (!this.arrayAssertion) {
-            this.arrayAssertion = defaults.arrayAssertion
-        }
-        if (!this.iterableAssertion) {
-            this.iterableAssertion = defaults.iterableAssertion
-        }
-        if (!this.charAssertion) {
-            this.charAssertion = defaults.charAssertion
-        }
-        if (!this.characterAssertion) {
-            this.characterAssertion = defaults.characterAssertion
-        }
-        if (!this.realNumberAssertion) {
-            this.realNumberAssertion = defaults.realNumberAssertion
-        }
-        if (!this.realNumberWrapperAssertion) {
-            this.realNumberWrapperAssertion = defaults.realNumberWrapperAssertion
-        }
-        if (!this.wholeNumberAssertion) {
-            this.wholeNumberAssertion = defaults.wholeNumberAssertion
-        }
-        if (!this.wholeNumberWrapperAssertion) {
-            this.wholeNumberWrapperAssertion = defaults.wholeNumberWrapperAssertion
-        }
-        // entry point templates
-        if (!this.assertionsEntryPointClass) {
-            this.assertionsEntryPointClass = defaults.assertionsEntryPointClass
-        }
-        if (!this.assertionEntryPointMethod) {
-            this.assertionEntryPointMethod = defaults.assertionEntryPointMethod
-        }
-        if (!this.softEntryPointAssertionClass) {
-            this.softEntryPointAssertionClass = defaults.softEntryPointAssertionClass
-        }
-        if (!this.junitSoftEntryPointAssertionClass) {
-            this.junitSoftEntryPointAssertionClass = defaults.junitSoftEntryPointAssertionClass
-        }
-        if (!this.softEntryPointAssertionMethod) {
-            this.softEntryPointAssertionMethod = defaults.softEntryPointAssertionMethod
-        }
-        if (!this.bddEntryPointAssertionClass) {
-            this.bddEntryPointAssertionClass = defaults.bddEntryPointAssertionClass
-        }
-        if (!this.bddEntryPointAssertionMethod) {
-            this.bddEntryPointAssertionMethod = defaults.bddEntryPointAssertionMethod
-        }
+        // Directly override if not set
+        this.metaClass.properties.findAll { v -> TemplateHandler.class.isAssignableFrom(v.type) }
+            .each { prop -> 
+                TemplateHandler handler = prop.getProperty(this) as TemplateHandler
+                TemplateHandler defHandler = prop.getProperty(defaults) as TemplateHandler
+                handler.defaultFrom(defHandler)
+            }
     }
 
     List<Template> getTemplates(AssertionsGeneratorReport report) {
@@ -156,60 +132,244 @@ class Templates implements Serializable {
 
         // load any templates overridden by the user
         List<Template> userTemplates = new ArrayList<>()
-        // @format:off
-        // assertion class templates
-        loadUserTemplate(assertionClass, ASSERT_CLASS, "'class assertions'", userTemplates, report)
-        loadUserTemplate(hierarchicalAssertionConcreteClass, HIERARCHICAL_ASSERT_CLASS, "'hierarchical concrete class assertions'", userTemplates, report)
-        loadUserTemplate(hierarchicalAssertionAbstractClass, ABSTRACT_ASSERT_CLASS, "'hierarchical abstract class assertions'", userTemplates, report)
-        // assertion method templates
-        loadUserTemplate(objectAssertion, HAS, "'object assertions'", userTemplates, report)
-        loadUserTemplate(booleanAssertion, IS, "'boolean assertions'", userTemplates, report)
-        loadUserTemplate(booleanWrapperAssertion, IS_WRAPPER, "'boolean wrapper assertions'", userTemplates, report)
-        loadUserTemplate(arrayAssertion, HAS_FOR_ARRAY, "'array assertions'", userTemplates, report)
-        loadUserTemplate(iterableAssertion, HAS_FOR_ITERABLE, "'iterable assertions'", userTemplates, report)
-        loadUserTemplate(realNumberAssertion, HAS_FOR_REAL_NUMBER, "'real number assertions (float, double)'", userTemplates, report)
-        loadUserTemplate(realNumberWrapperAssertion, HAS_FOR_REAL_NUMBER_WRAPPER, "'real number wrapper assertions (Float, Double)'", userTemplates, report)
-        loadUserTemplate(wholeNumberAssertion, HAS_FOR_WHOLE_NUMBER, "'whole number assertions (int, long, short, byte)'", userTemplates, report)
-        loadUserTemplate(wholeNumberWrapperAssertion, HAS_FOR_WHOLE_NUMBER_WRAPPER, "'whole number has assertions (Integer, Long, Short, Byte)'", userTemplates, report)
-        loadUserTemplate(charAssertion, HAS_FOR_CHAR, "'char assertions'", userTemplates, report)
-        loadUserTemplate(characterAssertion, HAS_FOR_CHARACTER, "'Character assertions'", userTemplates, report)
-        // entry point templates
-        loadUserTemplate(assertionsEntryPointClass,ASSERTIONS_ENTRY_POINT_CLASS, "'assertions entry point class'", userTemplates, report)
-        loadUserTemplate(assertionEntryPointMethod,ASSERTION_ENTRY_POINT,  "'assertions entry point method'", userTemplates, report)
-        loadUserTemplate(softEntryPointAssertionClass, SOFT_ASSERTIONS_ENTRY_POINT_CLASS, "'soft assertions entry point class'", userTemplates, report)
-        loadUserTemplate(junitSoftEntryPointAssertionClass, JUNIT_SOFT_ASSERTIONS_ENTRY_POINT_CLASS, "'junit soft assertions entry point class'", userTemplates, report)
-        loadUserTemplate(softEntryPointAssertionMethod, SOFT_ENTRY_POINT_METHOD_ASSERTION, "'soft assertions entry point method'", userTemplates, report)
-        loadUserTemplate(bddEntryPointAssertionClass, BDD_ASSERTIONS_ENTRY_POINT_CLASS, "'BDD assertions entry point class'", userTemplates, report)
-        loadUserTemplate(bddEntryPointAssertionMethod, BDD_ENTRY_POINT_METHOD_ASSERTION, "'BDD assertions entry point method'", userTemplates, report)
-        // @format:on
+        handlers.each { handler -> handler.getTemplates(userTemplates, report) }
+        
         return userTemplates
     }
 
     @VisibleForTesting
-    void loadUserTemplate(String userTemplate, Template.Type type, String templateDescription,
+    void loadUserTemplate(Either<File, String> userTemplate, Template.Type type, String templateDescription,
                           List<Template> userTemplates, AssertionsGeneratorReport report) {
-        if (userTemplate != null) {
+        if (userTemplate) {
             try {
-                File templateFile = new File(dir, userTemplate)
-
                 final String templateContent
-                if (templateFile.exists()) {
+                if (userTemplate.leftValue) {
+                    File templateFile = dir.toPath().resolve(userTemplate.left.toPath()).toFile() 
                     templateContent = Files.contentOf(templateFile, CharEncoding.UTF_8)
+                    
                     report.registerUserTemplate("Using custom template for " + templateDescription + " loaded from "
-                            + dir + userTemplate)
+                            + templateFile)
                 } else {
-                    templateContent = userTemplate
+                    templateContent = userTemplate.right
                     report.registerUserTemplate("Using custom template for " + templateDescription
                             + " loaded from raw String")
                 }
-
+                
                 userTemplates.add(new Template(type, templateContent))
             } catch (Exception ignored) {
                 // best effort : if we can't read user template, use the default one.
                 report.registerUserTemplate("Use default " + templateDescription
                         + " assertion template as we failed to to read user template from "
-                        + dir + userTemplate)
+                        + userTemplate)
             }
         }
+    }
+
+    private trait EitherHandler {
+        
+        void setProperty(String name, Object value) {
+            def prop
+            try {
+                 prop = this.metaClass.getMetaProperty(name)
+            } catch (MissingPropertyException ignore) {
+                throw new ConfigurationException("Property with name ${name} does not exist for ${this.metaClass.class}, check spelling.")
+            }
+
+            if (prop && value && Either.class.isAssignableFrom(prop.type)) {
+                // handle the either type
+                TypeToken<?> base = TypeToken.of(getClass())
+                
+                Field field = base.getRawType().getDeclaredField(prop.name)
+                Preconditions.checkNotNull(field, "Property name is wrong? %s", prop)
+
+                def eitherToken = base.resolveType(field.genericType)
+                def leftToken = eitherToken.resolveType(Either.class.typeParameters[0])
+                def rightToken = eitherToken.resolveType(Either.class.typeParameters[1])
+
+                if (leftToken.isSupertypeOf(value.class)) {
+                    // it's a "left"
+                    this.metaClass.setProperty(this, name, Either.left(value))
+                } else if (rightToken.isSupertypeOf(value.class)) {
+                    this.metaClass.setProperty(this, name, Either.right(value))
+                } else {
+                    throw new ClassCastException(String.format("Can not assign type into %s %s", value.class, prop.class))
+                }
+            } else {
+                this.metaClass.setProperty(this, name, value)
+            }
+        }
+
+        def <L> List<L> getLeftProperties(Class<L> leftClazz) {
+            TypeToken<? extends EitherHandler> base = (TypeToken<? extends EitherHandler>)TypeToken.of(getClass())
+            
+            this.metaClass.properties.findAll { prop -> Either.class.isAssignableFrom(prop.type) }
+                .findAll { prop ->
+                    Field f = base.rawType.getDeclaredField(prop.name)
+                    def leftToken = base.resolveType(f.genericType).resolveType(Either.class.typeParameters[0])
+                    leftToken.isSubtypeOf(leftClazz)
+                }
+                .collect { (Either<L, ?>)this.metaClass.getProperty(this, it.name) }
+                .findAll { it && it.leftValue }
+                .collect { v -> v.left }
+        }
+
+        def <R> List<R> getRightProperties(Class<R> value) {
+            TypeToken<? extends EitherHandler> base = (TypeToken<? extends EitherHandler>)TypeToken.of(getClass())
+
+            metaClass.properties.findAll { prop -> Either.class.isAssignableFrom(prop.type) }
+                    .findAll { prop ->
+                        Field f = base.rawType.getDeclaredField(prop.name)
+                        def rightToken = base.resolveType(f.genericType).resolveType(Either.class.typeParameters[1])
+                        value.isAssignableFrom(rightToken.rawType)
+                    }
+                    .collect { (Either<?, R>)this.metaClass.getProperty(this, it.name) }
+                    .findAll { it && it.rightValue }
+                    .collect { v -> v.right }
+        }
+    }
+
+    private abstract class TemplateHandler<T extends TemplateHandler<T>> implements EitherHandler {
+        abstract def getTemplates(List<Template> userTemplates, AssertionsGeneratorReport report)
+        
+        List<File> getFiles() {
+            getLeftProperties(File.class)
+        }
+
+        /**
+         * Read values from defaults and write them to the properties inside {@code this}
+         * @param defaults
+         */
+        void defaultFrom(T defaults) {
+            if (defaults && !this.is(defaults)) {
+                defaults.metaClass.properties.findAll{ prop ->
+                    Either.class.isAssignableFrom(prop.type) 
+                }.each { prop ->
+                    def defValue = prop.getProperty(defaults)
+                    def currValue = prop.getProperty(this)
+                    if (defValue && !currValue) {
+                        prop.setProperty(this, defValue)
+                    }
+                }
+            }
+        }
+
+        
+        void writeOutputStream(ObjectOutputStream s) throws IOException {
+            this.metaClass.properties.findAll{ prop ->
+                Either.class.isAssignableFrom(prop.type)
+            }.each {
+                s.writeObject(it.getProperty(this))
+            }
+        }
+
+        void fromInputStream(ObjectInputStream s) throws IOException, ClassNotFoundException {
+            this.metaClass.properties.findAll{ prop ->
+                Either.class.isAssignableFrom(prop.type)
+            }.each { prop ->
+                prop.setProperty(this, s.readObject())
+            }
+        }
+
+    }
+
+    @EqualsAndHashCode
+    class AssertionTemplates extends TemplateHandler<AssertionTemplates> implements Serializable {
+
+        Either<File, String> assertionClass
+        Either<File, String> hierarchicalConcrete
+        Either<File, String> hierarchicalAbstract
+        
+        @Override
+        def getTemplates(List<Template> userTemplates, AssertionsGeneratorReport report) {
+            // @format:off
+            loadUserTemplate(assertionClass, ASSERT_CLASS, "'class assertions'", userTemplates, report)
+            loadUserTemplate(hierarchicalConcrete, HIERARCHICAL_ASSERT_CLASS, "'hierarchical concrete class assertions'", userTemplates, report)
+            loadUserTemplate(hierarchicalAbstract, ABSTRACT_ASSERT_CLASS, "'hierarchical abstract class assertions'", userTemplates, report)
+            // @format:on
+        }
+    }
+
+    @EqualsAndHashCode
+    class MethodTemplates extends TemplateHandler<MethodTemplates> implements Serializable {
+
+        Either<File, String> object
+        Either<File, String> booleanPrimitive
+        Either<File, String> booleanWrapper
+        Either<File, String> array
+        Either<File, String> iterable
+        Either<File, String> charPrimitive
+        Either<File, String> character
+        Either<File, String> realNumberPrimitive
+        Either<File, String> realNumberWrapperAssertion
+        Either<File, String> wholeNumberPrimitive
+        Either<File, String> wholeNumberWrapperAssertion
+
+
+        @Override
+        def getTemplates(List<Template> userTemplates, AssertionsGeneratorReport report) {
+            // @format:off
+            loadUserTemplate(object, HAS, "'object assertions'", userTemplates, report)
+
+            loadUserTemplate(booleanPrimitive, IS, "'boolean assertions'", userTemplates, report)
+            loadUserTemplate(booleanWrapper, IS_WRAPPER, "'boolean wrapper assertions'", userTemplates, report)
+
+            loadUserTemplate(array, HAS_FOR_ARRAY, "'array assertions'", userTemplates, report)
+            loadUserTemplate(iterable, HAS_FOR_ITERABLE, "'iterable assertions'", userTemplates, report)
+
+            loadUserTemplate(charPrimitive, HAS_FOR_CHAR, "'char assertions'", userTemplates, report)
+            loadUserTemplate(character, HAS_FOR_CHARACTER, "'Character assertions'", userTemplates, report)
+
+            loadUserTemplate(realNumberPrimitive, HAS_FOR_REAL_NUMBER, "'real number assertions (float, double)'", userTemplates, report)
+            loadUserTemplate(realNumberWrapperAssertion, HAS_FOR_REAL_NUMBER_WRAPPER, "'real number wrapper assertions (Float, Double)'", userTemplates, report)
+
+            loadUserTemplate(wholeNumberPrimitive, HAS_FOR_WHOLE_NUMBER, "'whole number assertions (int, long, short, byte)'", userTemplates, report)
+            loadUserTemplate(wholeNumberWrapperAssertion, HAS_FOR_WHOLE_NUMBER_WRAPPER, "'whole number has assertions (Integer, Long, Short, Byte)'", userTemplates, report)
+            // @format:on
+        }
+    }
+
+    @EqualsAndHashCode
+    class EntryPointTemplates extends TemplateHandler<EntryPointTemplates> implements Serializable {
+
+        Either<File, String> assertions
+        Either<File, String> assertionMethod
+        Either<File, String> soft
+        Either<File, String> junitSoft
+        Either<File, String> softMethod
+        Either<File, String> bdd
+        Either<File, String> bddMethod
+
+        @Override
+        def getTemplates(List<Template> userTemplates, AssertionsGeneratorReport report) {
+            // @format:off
+            loadUserTemplate(assertions,ASSERTIONS_ENTRY_POINT_CLASS, "'assertions entry point class'", userTemplates, report)
+            loadUserTemplate(assertionMethod,ASSERTION_ENTRY_POINT,  "'assertions entry point method'", userTemplates, report)
+            loadUserTemplate(soft, SOFT_ASSERTIONS_ENTRY_POINT_CLASS, "'soft assertions entry point class'", userTemplates, report)
+            loadUserTemplate(junitSoft, JUNIT_SOFT_ASSERTIONS_ENTRY_POINT_CLASS, "'junit soft assertions entry point class'", userTemplates, report)
+            loadUserTemplate(softMethod, SOFT_ENTRY_POINT_METHOD_ASSERTION, "'soft assertions entry point method'", userTemplates, report)
+            loadUserTemplate(bdd, BDD_ASSERTIONS_ENTRY_POINT_CLASS, "'BDD assertions entry point class'", userTemplates, report)
+            loadUserTemplate(bddMethod, BDD_ENTRY_POINT_METHOD_ASSERTION, "'BDD assertions entry point method'", userTemplates, report)
+            // @format:on
+        }
+        
+    }
+    
+    private void writeObject(ObjectOutputStream s) throws IOException {
+        
+        s.writeObject(dir)
+        assertions.writeOutputStream(s)
+        entryPoints.writeOutputStream(s)
+        methods.writeOutputStream(s)
+    }
+
+    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
+        dir = s.readObject() as File
+
+        assertions = new AssertionTemplates()
+        assertions.fromInputStream(s)
+        entryPoints = new EntryPointTemplates()
+        entryPoints.fromInputStream(s)
+        methods = new MethodTemplates()
+        methods.fromInputStream(s)
     }
 }

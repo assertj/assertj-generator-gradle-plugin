@@ -182,9 +182,11 @@ defined in the global scope, files are relative to `${projectDir}/assertj-templa
 path of the source set (e.g. `main` implies templates are in `src/main/assertj-templates`). This convention may be 
 overridden by specifying the `dir` parameter within the block. 
 
-For more information on names and template syntax, please see the 
+For more information on template syntax, please see the 
 [AssertJ Generator Templates Section](http://joel-costigliola.github.io/assertj/assertj-assertions-generator.html#generated-assertions-templates).
 
+The names of templates mirror those from the AssertJ Documentation, but the actual names and nesting are listed 
+[here](src/main/groovy/org/assertj/generator/gradle/tasks/config/Templates.groovy).
 
 The following example replaces the whole number field with a custom template for only the `main` sourceSet, any others 
 remain unaffected. 
@@ -196,7 +198,9 @@ sourceSets {
     main {
         assertJ {
             templates {
-                wholeNumberAssertion = 'public get${Property}() { }'
+                methods {
+                  wholeNumberPrimitive = 'public get${Property}() { }'
+                }
             }              
         }
     }
@@ -207,8 +211,10 @@ The following example changes the template to a `file()` template for _all_ sour
 ```gradle
 assertJ { 
     templates {
-        // Set the template to file content: assertj-templates/wholeNumberOverride.txt
-        wholeNumberAssertion = file('wholeNumberOverride.txt')
+        // Set the template to file content: ./wholeNumberOverride.txt
+        methods {
+            wholeNumberPrimitive = file('wholeNumberOverride.txt')
+        }
     }
 }
 

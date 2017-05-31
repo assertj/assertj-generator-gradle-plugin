@@ -33,6 +33,14 @@ public interface AssertJGeneratorOptions {
 
     String SOURCE_SET_NAME_TAG = "${sourceSet.testName}";
 
+
+    /**
+     * Generate generating Soft Assertions entry point class.
+     * @return templates value, never {@code null}
+     */
+    Templates getTemplates();
+
+
     /**
      * Method used for improving configuration DSL
      *
@@ -133,12 +141,6 @@ public interface AssertJGeneratorOptions {
      * @see #isSkip()
      */
     void setSkip(boolean skip);
-
-    /**
-     * Generate generating Soft Assertions entry point class.
-     * @return templates value, never {@code null}
-     */
-    Templates getTemplates();
 
     AssertJGeneratorOptions defaultFromGlobals(Project project);
 
