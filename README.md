@@ -1,6 +1,6 @@
 # AssertJ Generator Gradle Plugin
 
-[![Linux Build Status](https://travis-ci.org/Nava2/assertj-generator-gradle-plugin.svg?branch=master)](https://travis-ci.org/Nava2/assertj-generator-gradle-plugin)
+[![Linux Build Status](https://travis-ci.org/assertj/assertj-generator-gradle-plugin.svg?branch=master)](https://travis-ci.org/assertj/assertj-generator-gradle-plugin)
 [![Windows status](https://ci.appveyor.com/api/projects/status/ia2ki6wprow9ysnl/branch/master?svg=true)](https://ci.appveyor.com/project/Nava2/assertj-generator-gradle-plugin/branch/master)
 
 [Gradle Plugin Portal](https://plugins.gradle.org/plugin/org.assertj.generator.gradle.plugin)
