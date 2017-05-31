@@ -72,7 +72,7 @@ class TemplateChanges {
                 main {
                     assertJ {
                         templates {
-                            wholeNumberAssertion = '${TEMPLATE_CONTENT}'
+                            methods.wholeNumberPrimitive = '${TEMPLATE_CONTENT}'
                         }              
                     }
                 }
@@ -104,7 +104,7 @@ class TemplateChanges {
         TestUtils.buildFile(buildFile, """
             assertJ {
                 templates {
-                    wholeNumberAssertion = '${TEMPLATE_CONTENT}'
+                    methods.wholeNumberPrimitive = '${TEMPLATE_CONTENT}'
                 }              
             }
             
@@ -140,7 +140,7 @@ class TemplateChanges {
         TestUtils.buildFile(buildFile, """
             assertJ {
                 templates {
-                    wholeNumberAssertion = '${TEMPLATE_CONTENT}'
+                    methods.wholeNumberPrimitive = '${TEMPLATE_CONTENT}'
                 }              
             }
             
@@ -178,12 +178,12 @@ class TemplateChanges {
     }
 
     @Test
-    void incremental_templates_after_changes() {
+    void incremental_templates_after_string_change() {
 
         TestUtils.buildFile(buildFile, """
             assertJ {
                 templates {
-                    wholeNumberAssertion = '${TEMPLATE_CONTENT}'
+                    methods { wholeNumberPrimitive = '${TEMPLATE_CONTENT}' }
                 }              
             }
             
@@ -219,7 +219,7 @@ class TemplateChanges {
         TestUtils.buildFile(buildFile, """
             assertJ {
                 templates {
-                    wholeNumberAssertion = '${NEW_TEMPLATE_CONTENT}'
+                    methods.wholeNumberPrimitive = '${NEW_TEMPLATE_CONTENT}'
                 }              
             }
             
@@ -236,6 +236,157 @@ class TemplateChanges {
         assert result2.task(':test').outcome == TaskOutcome.UP_TO_DATE // no test files!
 
         assertThat(generatedAssert.text).contains(NEW_TEMPLATE_CONTENT)
+    }
+
+    @Test
+    void incremental_templates_change_type() {
+
+        
+        TestUtils.buildFile(buildFile, """
+            assertJ {
+                templates {
+                    methods { wholeNumberPrimitive = '${TEMPLATE_CONTENT}' }
+                }              
+            }
+            
+            sourceSets {
+                main {
+                    assertJ { }
+                }
+            }
+        """)
+
+        def runner = GradleRunner.create()
+                .withProjectDir(testProjectDir.root)
+                .withDebug(true)
+                .withPluginClasspath()
+                .withArguments('-i', '-s', 'test')
+
+        def result = runner.build()
+
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':test').outcome == TaskOutcome.SUCCESS
+
+        Path generatedAssert = testProjectDir.root.toPath()
+                .resolve("build/generated-src/test/java")
+                .resolve(packagePath)
+                .resolve("HelloWorldAssert.java")
+
+        assertThat(generatedAssert.text).contains('/* %%% foo %%% */')
+
+        // Now we update the content of the template assertion to make sure that the task is re-run
+
+        def NEW_TEMPLATE_CONTENT = '/* % NEW CONTENT % */'
+
+        File templateFolder = testProjectDir.newFolder('templates')
+        File content = templateFolder.toPath().resolve("template.txt").toFile()
+        content << NEW_TEMPLATE_CONTENT
+        
+        def contentPath = testProjectDir.root.toPath().relativize(content.toPath()).toString().replace('\\', '/')
+        
+        buildFile.delete()
+        TestUtils.buildFile(buildFile, """
+            assertJ {
+                templates {
+                    methods.wholeNumberPrimitive = file('${contentPath}')
+                }              
+            }
+            
+            sourceSets {
+                main {
+                    assertJ { }
+                }
+            }
+        """)
+
+        def result2 = runner.build()
+
+        assert result2.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result2.task(':test').outcome == TaskOutcome.UP_TO_DATE // no test files!
+
+        assertThat(generatedAssert.text).contains(NEW_TEMPLATE_CONTENT)
+    }
+
+    @Test
+    void incremental_templates_after_file_change() {
+        
+        File templateFolder = testProjectDir.newFolder('templates')
+        File content = templateFolder.toPath().resolve("template.txt").toFile()
+        content << TEMPLATE_CONTENT
+        
+        def contentPath = testProjectDir.root.toPath().relativize(content.toPath()).toString().replace('\\', '/')
+
+        TestUtils.buildFile(buildFile, """
+            assertJ {
+                templates {
+                    methods { wholeNumberPrimitive = file("${contentPath}") }
+                }              
+            }
+            
+            sourceSets {
+                main {
+                    assertJ { }
+                }
+            }
+        """)
+
+        def runner = GradleRunner.create()
+                .withProjectDir(testProjectDir.root)
+                .withDebug(true)
+                .withPluginClasspath()
+                .withArguments('-i', '-s', 'test')
+
+        def result = runner.build()
+
+        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result.task(':test').outcome == TaskOutcome.SUCCESS
+
+        Path generatedAssert = testProjectDir.root.toPath()
+                .resolve("build/generated-src/test/java")
+                .resolve(packagePath)
+                .resolve("HelloWorldAssert.java")
+
+        assertThat(generatedAssert.text).contains('/* %%% foo %%% */')
+
+        // Now we update the content of the template assertion to make sure that the task is re-run
+
+        def NEW_TEMPLATE_CONTENT = '/* % NEW CONTENT % */'
+        content.delete()
+        content << NEW_TEMPLATE_CONTENT
+
+        def result2 = runner.build()
+
+        assert result2.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert result2.task(':test').outcome == TaskOutcome.UP_TO_DATE // no test files!
+
+        assertThat(generatedAssert.text).contains(NEW_TEMPLATE_CONTENT)
+    }
+
+    @Test
+    void bad_template_name_should_fail() {
+
+        TestUtils.buildFile(buildFile, """
+            assertJ {
+                templates {
+                    methods.wholeNumberAssertion = '${TEMPLATE_CONTENT}'
+                }              
+            }
+            
+            sourceSets {
+                main {
+                    assertJ { }
+                }
+            }
+        """)
+
+        def result = GradleRunner.create()
+                .withProjectDir(testProjectDir.root)
+                .withDebug(true)
+                .withPluginClasspath()
+                .withArguments('-i', '-s', 'generateAssertJ')
+                .buildAndFail()
+        
+        assert result.output.contains("wholeNumberAssertion")
     }
 
 }

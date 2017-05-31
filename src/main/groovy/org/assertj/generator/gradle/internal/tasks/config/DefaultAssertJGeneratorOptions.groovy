@@ -115,6 +115,8 @@ class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Seriali
         ConfigureUtil.configure(closure, orCreateEntryPoints)
         this
     }
+    
+    
 
     @Override
     AssertJGeneratorOptions defaultFromGlobals(Project project) {

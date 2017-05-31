@@ -42,6 +42,11 @@ class AssertJGenerationTask extends SourceTask {
 
     @Input
     AssertJGeneratorOptions assertJOptions
+    
+    @InputFiles
+    List<File> getTemplateFiles() {
+        assertJOptions.templates.files
+    }
 
     @OutputDirectory
     File outputDir
@@ -63,19 +68,20 @@ class AssertJGenerationTask extends SourceTask {
         if (assertJOptions.skip) {
             return
         }
-
-
+        
         Set<File> sourceFiles = sourceDirectorySet.files
 
         def classesToGenerate = []
-        def classpathChanged = false
+        def fullRegenRequired = false
         inputs.outOfDate { change ->
             if (generationClasspath.contains(change.file)) {
                 // file is part of classpath
-                classpathChanged = true
+                fullRegenRequired = true
             } else if (sourceFiles.contains(change.file)) {
                 // source file changed
                 classesToGenerate += change.file
+            } else if (templateFiles.contains(change.file)) {
+                fullRegenRequired = true
             }
         }
 
@@ -86,9 +92,8 @@ class AssertJGenerationTask extends SourceTask {
 //                targetFile.delete()
 //            }
         }
-
-
-        if (classpathChanged || !inputs.incremental) {
+        
+        if (fullRegenRequired || !inputs.incremental) {
             project.delete(outputDir.listFiles())
             classesToGenerate = sourceFiles
         }
