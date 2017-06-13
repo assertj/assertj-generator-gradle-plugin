@@ -22,7 +22,7 @@ pluginBundle {
 
     plugins {
         assertJGeneratorPlugin {
-            id = 'org.assertj.generator.gradle.plugin'
+            id = 'org.assertj.generator'
             displayName = 'AssertJ Generator Plugin'
         }
     }
@@ -58,7 +58,7 @@ tasks.publishPlugins.dependsOn tasks.setupPluginUpload
 gradlePlugin {
     plugins {
         assertJGeneratorPlugin {
-            id = "org.assertj.generator.gradle.plugin"
+            id = "org.assertj.generator"
             implementationClass = "org.assertj.generator.gradle.AssertJGeneratorGradlePlugin"
         }
     }

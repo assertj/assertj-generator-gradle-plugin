@@ -100,7 +100,7 @@ class SimpleBuild {
 
         buildFile << """
             // Add required plugins and source sets to the sub projects
-            plugins { id "org.assertj.generator.gradle.plugin" } // Note must use this syntax
+            plugins { id "org.assertj.generator" } // Note must use this syntax
 
             // Override defaults
             sourceSets {
