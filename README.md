@@ -15,7 +15,9 @@ provided by the [AssertJ Generator Maven Plugin](http://joel-costigliola.github.
 ## Quick Start
 
 Below is a minimal configuration that will cause _all_ classes defined in the `main` source set to have an `AssertJ` 
-assertion generated for it. All of these will be placed into the highest package in use.
+assertion generated for it. All of these will be placed into the highest package in use. 
+
+This plugin requires Gradle 4.0.
 
 ```gradle
 plugins { 
