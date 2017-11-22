@@ -169,17 +169,8 @@ class AssertJGenerationTask extends SourceTask {
         logger.info(report.reportContent)
     }
 
-    /**
-     * Delegate for {@link #setSource(java.lang.Object)}
-     * 
-     * @param source
-     */
-    void setSource(FileTree source) {
-        setSource((Object) source)
-    }
-
     @Override
-    void setSource(final Object source) {
+    void setSource(final FileTree source) {
         super.setSource(source)
         
         if (source instanceof SourceDirectorySet) {
