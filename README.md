@@ -19,7 +19,6 @@ assertion generated for it. All of these will be placed into the highest package
 
 ```gradle
 plugins { 
-    // version matches the version for assertj-generator
     id 'org.assertj.generator' version '0.0.4b'
 } 
 
