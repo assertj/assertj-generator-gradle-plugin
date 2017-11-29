@@ -1,6 +1,6 @@
 
 group 'org.assertj'
-version '0.0.4b'
+version '0.0.5'
 
 apply plugin: 'groovy'
 apply plugin: 'idea'
