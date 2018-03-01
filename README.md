@@ -21,7 +21,7 @@ This plugin requires Gradle 4.0.
 
 ```gradle
 plugins {
-    id 'org.assertj.generator' version '0.0.6'
+    id 'org.assertj.generator' version '0.0.6b'
 }
 
 sourceSets {
