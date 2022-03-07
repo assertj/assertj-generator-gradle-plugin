@@ -190,7 +190,6 @@ class AssertJGenerationTask extends SourceTask {
         super.getSource()
     }
 
-    @Internal
     private def getClassNames() {
         Map<File, String> fullyQualifiedNames = new HashMap<>(sourceDirectorySet.files.size())
 

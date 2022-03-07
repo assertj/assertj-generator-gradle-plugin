@@ -58,7 +58,7 @@ class AssertJGeneratorGradlePlugin implements Plugin<Project> {
             add(project.dependencies.create("org.assertj:assertj-assertions-generator:2.0.0"))
         }
 
-        Configuration compileTestConfig = project.configurations.findByName(JavaPlugin.TEST_COMPILE_CONFIGURATION_NAME)
+        Configuration compileTestConfig = project.configurations.findByName(JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME)
         if (compileTestConfig) {
             assertJGeneratorConfiguration.extendsFrom(compileTestConfig)
         }
