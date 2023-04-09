@@ -34,11 +34,13 @@ class TestUtils {
                 mavenCentral()
             }
             
-            dependencies {                
+            dependencies {
+                implementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
+
                 // https://mvnrepository.com/artifact/org.assertj/assertj-core
-                testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
+                testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.22.0'
                 
-                testCompile group: 'junit', name: 'junit', version: '4.12'
+                testImplementation group: 'junit', name: 'junit', version: '4.13.1'
             }
         """.stripMargin()
     }

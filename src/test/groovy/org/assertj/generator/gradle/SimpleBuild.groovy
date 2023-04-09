@@ -31,7 +31,7 @@ class SimpleBuild {
     public final TemporaryFolder testProjectDir = new TemporaryFolder()
 
     File buildFile
-    
+
     @Before
     void setup() {
         buildFile = testProjectDir.newFile('build.gradle')
@@ -116,14 +116,13 @@ class SimpleBuild {
                 mavenCentral()
             }
                         
-            dependencies {
-                // https://mvnrepository.com/artifact/com.google.guava/guava
-                compile group: 'com.google.guava', name: 'guava', version: '20.0'
+            dependencies { 
+                implementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
                 
-                // https://mvnrepository.com/artifact/org.assertj/assertj-core
-                testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
+                implementation group: 'com.google.guava', name: 'guava', version: '30.0-jre'
                 
-                testCompile group: 'junit', name: 'junit', version: '4.12'
+                testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.22.0'
+                testImplementation group: 'junit', name: 'junit', version: '4.13.1'
             }
         """
 
@@ -163,7 +162,6 @@ class SimpleBuild {
         assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
         assert result.task(':compileTestJava').outcome == TaskOutcome.SUCCESS
     }
-
 
 
 }

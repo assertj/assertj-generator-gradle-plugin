@@ -52,16 +52,14 @@ class EntryPointGeneratorOptions implements Iterable<AssertionsEntryPointType>, 
     void only(AssertionsEntryPointType... rest) {
         entryPoints.clear()
 
-        if (rest.length > 0) {
-            entryPoints.addAll(EnumSet.copyOf(Arrays.asList(rest)))
-        }
+        entryPoints.addAll(rest.toList())
     }
 
     void only(String... rest) {
         Set<AssertionsEntryPointType> asEnums = Arrays.stream(rest)
-            .map { it.toUpperCase() }
-            .map { AssertionsEntryPointType.valueOf(it) }
-            .collect(Collectors.toSet())
+                .map { it.toUpperCase() }
+                .map { AssertionsEntryPointType.valueOf(it) }
+                .collect(Collectors.toSet())
 
         only(asEnums.toArray(new AssertionsEntryPointType[0]))
     }
@@ -116,7 +114,7 @@ class EntryPointGeneratorOptions implements Iterable<AssertionsEntryPointType>, 
     }
 
     private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
-        Set<AssertionsEntryPointType> typesFromStream = (Set<AssertionsEntryPointType>)s.readObject()
+        Set<AssertionsEntryPointType> typesFromStream = (Set<AssertionsEntryPointType>) s.readObject()
         this.entryPoints = typesFromStream
 
         classPackage = (String) s.readObject()

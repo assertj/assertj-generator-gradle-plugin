@@ -42,10 +42,10 @@ class DefaultAssertJGeneratorSourceSet extends DefaultAssertJGeneratorOptions im
     DefaultAssertJGeneratorSourceSet(SourceSet sourceSet, SourceDirectorySetFactory sourceDirectorySetFactory) {
         super()
         this.name = sourceSet.name
-        this.assertJDirectorySet = sourceDirectorySetFactory.create("${((DefaultSourceSet)sourceSet).displayName} AssertJ Sources")
+        this.assertJDirectorySet = sourceDirectorySetFactory.create("${((DefaultSourceSet) sourceSet).displayName} AssertJ Sources")
 
         // We default to the java directory
-        assertJ.srcDirs = ["src/${name}/java"]
+        assertJ.setSrcDirs(["src/${this.name}/java"])
         // by default we can include all because the closure is applied to _every_ source set
         assertJ.include "**/*.java"
     }
@@ -88,10 +88,10 @@ class DefaultAssertJGeneratorSourceSet extends DefaultAssertJGeneratorOptions im
     }
 
     private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
-        this.outputDir = (File)s.readObject()
-        this.entryPointClassPackage = (String)s.readObject()
+        this.outputDir = (File) s.readObject()
+        this.entryPointClassPackage = (String) s.readObject()
         this.skip = s.readBoolean()
-        this.entryPoints = (EntryPointGeneratorOptions)s.readObject()
-        templates.copyFrom((Templates)s.readObject())
+        this.entryPoints = (EntryPointGeneratorOptions) s.readObject()
+        templates.copyFrom((Templates) s.readObject())
     }
 }

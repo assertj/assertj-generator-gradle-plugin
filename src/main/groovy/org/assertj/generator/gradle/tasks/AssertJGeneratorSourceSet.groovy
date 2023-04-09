@@ -19,7 +19,7 @@ import org.gradle.api.file.SourceDirectorySet
  * Source Set implementation used to allow definition within the JavaPlugin's
  * Source sets. This does not extend {@link org.gradle.api.tasks.SourceSet}.
  */
-interface AssertJGeneratorSourceSet {
+interface AssertJGeneratorSourceSet extends GroovyObject {
 
     String NAME = "assertJ"
 
