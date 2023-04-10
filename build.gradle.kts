@@ -63,6 +63,6 @@ dependencies {
     implementation("com.google.guava:guava:28.1-jre")
 
     testImplementation(gradleTestKit())
-    testImplementation("junit:junit:4.13.1")
+    testImplementation("junit:junit:4.13.2")
 }
 
