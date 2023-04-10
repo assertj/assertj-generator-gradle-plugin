@@ -3,7 +3,7 @@ import com.gradle.publish.PublishTask.GRADLE_PUBLISH_SECRET
 
 plugins {
     id("groovy")
-    id("com.gradle.plugin-publish") version "1.1.0"
+    id("com.gradle.plugin-publish") version "1.2.0"
     id("java-gradle-plugin")
 }
 
