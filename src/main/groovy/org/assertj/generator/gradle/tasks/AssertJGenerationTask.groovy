@@ -13,6 +13,7 @@
 package org.assertj.generator.gradle.tasks
 
 import com.google.common.collect.Sets
+import com.google.common.reflect.TypeToken
 import org.assertj.assertions.generator.AssertionsEntryPointType
 import org.assertj.assertions.generator.BaseAssertionGenerator
 import org.assertj.assertions.generator.description.ClassDescription
@@ -42,7 +43,7 @@ class AssertJGenerationTask extends SourceTask {
 
     @Input
     AssertJGeneratorOptions assertJOptions
-    
+
     @InputFiles
     List<File> getTemplateFiles() {
         assertJOptions.templates.files
@@ -50,7 +51,7 @@ class AssertJGenerationTask extends SourceTask {
 
     @OutputDirectory
     File outputDir
-    
+
     private SourceDirectorySet sourceDirectorySet
 
     void setOutputDir(Path newDir) {
@@ -68,7 +69,7 @@ class AssertJGenerationTask extends SourceTask {
         if (assertJOptions.skip) {
             return
         }
-        
+
         Set<File> sourceFiles = sourceDirectorySet.files
 
         def classesToGenerate = []
@@ -92,7 +93,7 @@ class AssertJGenerationTask extends SourceTask {
 //                targetFile.delete()
 //            }
         }
-        
+
         if (fullRegenRequired || !inputs.incremental) {
             project.delete(outputDir.listFiles())
             classesToGenerate = sourceFiles
@@ -104,7 +105,7 @@ class AssertJGenerationTask extends SourceTask {
         def classes = ClassUtil.collectClasses(classLoader, inputClassNames.values().toArray(new String[0]))
 
         def inputClassesToFile = inputClassNames.collectEntries { file, classDef ->
-            [(classes.find { it.name == classDef }): file]
+            [(classes.find { it.type.typeName == classDef }): file]
         }
         inputClassesToFile.values().removeAll {
             !classesToGenerate.contains(it)
@@ -122,17 +123,17 @@ class AssertJGenerationTask extends SourceTask {
         }
 
         try {
-            generator.setDirectoryWhereAssertionFilesAreGenerated(absOutputDir.toString())
+            generator.setDirectoryWhereAssertionFilesAreGenerated(absOutputDir.toFile())
 
             report.setInputClasses(inputClassNames.values())
 
-            Set<Class<?>> filteredClasses = removeAssertClasses(classes)
+            Set<TypeToken<?>> filteredClasses = removeAssertClasses(classes)
             report.setExcludedClassesFromAssertionGeneration(Sets.difference(classes, filteredClasses))
 
             Set<ClassDescription> classDescriptions = new LinkedHashSet<>()
 
             if (assertJOptions.hierarchical) {
-                for (Class<?> clazz : filteredClasses) {
+                for (TypeToken<?> clazz : filteredClasses) {
                     ClassDescription classDescription = converter.convertToClassDescription(clazz)
                     File[] generatedCustomAssertionFiles = generator.generateHierarchicalCustomAssertionFor(classDescription,
                             filteredClasses)
@@ -141,7 +142,7 @@ class AssertJGenerationTask extends SourceTask {
                     classDescriptions.add(classDescription)
                 }
             } else {
-                for (Class<?> clazz : filteredClasses) {
+                for (TypeToken<?> clazz : filteredClasses) {
                     def classDescription = converter.convertToClassDescription(clazz)
                     classDescriptions.add(classDescription)
 
@@ -172,7 +173,7 @@ class AssertJGenerationTask extends SourceTask {
     @Override
     void setSource(final FileTree source) {
         super.setSource(source)
-        
+
         if (source instanceof SourceDirectorySet) {
             this.sourceDirectorySet = (SourceDirectorySet) source
         }
@@ -197,7 +198,7 @@ class AssertJGenerationTask extends SourceTask {
             Path root = tree.dir.toPath()
             tree.visit(new FileVisitor() {
                 @Override
-                void visitDir(FileVisitDetails fileVisitDetails) { }
+                void visitDir(FileVisitDetails fileVisitDetails) {}
 
                 @Override
                 void visitFile(FileVisitDetails fileVisitDetails) {
@@ -220,10 +221,10 @@ class AssertJGenerationTask extends SourceTask {
         fullyQualifiedNames
     }
 
-    private static Set<Class<?>> removeAssertClasses(Set<Class<?>> classList) {
-        Set<Class<?>> filteredClassList = newLinkedHashSet()
-        for (Class<?> clazz : classList) {
-            String classSimpleName = clazz.getSimpleName()
+    private static Set<TypeToken<?>> removeAssertClasses(Set<TypeToken<?>> classList) {
+        Set<TypeToken<?>> filteredClassList = newLinkedHashSet()
+        for (TypeToken<?> clazz : classList) {
+            String classSimpleName = clazz.rawType.simpleName
             if (!classSimpleName.endsWith("Assert") && !classSimpleName.endsWith("Assertions")) {
                 filteredClassList.add(clazz)
             }

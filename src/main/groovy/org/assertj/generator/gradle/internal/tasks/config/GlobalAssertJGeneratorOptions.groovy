@@ -24,7 +24,8 @@ import org.gradle.api.Project
 /**
  * Simple, default implementation of {@link AssertJGeneratorOptions}
  */
-@EqualsAndHashCode @ToString
+@EqualsAndHashCode
+@ToString
 class GlobalAssertJGeneratorOptions extends DefaultAssertJGeneratorOptions implements Serializable {
 
     GlobalAssertJGeneratorOptions() {
@@ -43,7 +44,7 @@ class GlobalAssertJGeneratorOptions extends DefaultAssertJGeneratorOptions imple
 
     @PackageScope
     String getOutputDirRaw() {
-        this.outputDirRaw
+        this.outputDir
     }
 
     private void writeObject(ObjectOutputStream s) throws IOException {
@@ -56,7 +57,7 @@ class GlobalAssertJGeneratorOptions extends DefaultAssertJGeneratorOptions imple
     private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
         this.outputDir = s.readUTF()
         this.skip = s.readBoolean()
-        this._entryPoints = (EntryPointGeneratorOptions)s.readObject()
-        templates.copyFrom((Templates)s.readObject())
+        this._entryPoints = (EntryPointGeneratorOptions) s.readObject()
+        templates.copyFrom((Templates) s.readObject())
     }
 }

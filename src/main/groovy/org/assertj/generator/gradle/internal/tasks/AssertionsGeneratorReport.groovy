@@ -12,6 +12,7 @@
  */
 package org.assertj.generator.gradle.internal.tasks
 
+import com.google.common.reflect.TypeToken
 import org.assertj.assertions.generator.AssertionsEntryPointType
 
 import static com.google.common.collect.Maps.newTreeMap
@@ -31,7 +32,7 @@ class AssertionsGeneratorReport {
     private Collection<String> inputPackages
     private Collection<String> inputClasses
     private Exception exception
-    private Collection<Class<?>> excludedClassesFromAssertionGeneration
+    private Collection<TypeToken<?>> excludedClassesFromAssertionGeneration
     private Set<String> inputClassesNotFound
     private List<String> userTemplates
 
@@ -137,7 +138,7 @@ class AssertionsGeneratorReport {
         reportBuilder.append(System.lineSeparator())
         reportBuilder.append(SECTION_START).append("Generator input parameters").append(SECTION_END)
                 .append(System.lineSeparator())
-        if (isNotEmpty(userTemplates as List<String>)) {
+        if (!(userTemplates as List<String>).isEmpty()) {
             reportBuilder.append("The following templates will replace the ones provided by AssertJ when generating AssertJ assertions :\n")
             for (String inputPackage : userTemplates) {
                 reportBuilder.append(INDENT).append(inputPackage).append(System.lineSeparator())
@@ -150,7 +151,7 @@ class AssertionsGeneratorReport {
                 reportBuilder.append(INDENT).append(inputPackage).append(System.lineSeparator())
             }
         }
-        if (isNotEmpty(inputClasses as String[])) {
+        if (!isNotEmpty(inputClasses as String[])) {
             if (isNotEmpty(inputPackages as String[])) {
                 reportBuilder.append(System.lineSeparator())
             }
@@ -159,7 +160,7 @@ class AssertionsGeneratorReport {
                 reportBuilder.append(INDENT).append(inputClass).append(System.lineSeparator())
             }
         }
-        if (isNotEmpty(excludedClassesFromAssertionGeneration)) {
+        if (!excludedClassesFromAssertionGeneration?.isEmpty()) {
             reportBuilder.append(System.lineSeparator())
             reportBuilder.append("Input classes excluded from assertions generation:\n")
             for (Class<?> excludedClass : excludedClassesFromAssertionGeneration) {
@@ -177,7 +178,7 @@ class AssertionsGeneratorReport {
     }
 
     void reportEntryPointGeneration(AssertionsEntryPointType assertionsEntryPointType,
-                                           File assertionsEntryPointFile) {
+                                    File assertionsEntryPointFile) {
         this.assertionsEntryPointFilesByType.put(assertionsEntryPointType, assertionsEntryPointFile)
     }
 
@@ -197,7 +198,7 @@ class AssertionsGeneratorReport {
         return exception
     }
 
-    void setExcludedClassesFromAssertionGeneration(Collection<Class<?>> excludedClassSet) {
+    void setExcludedClassesFromAssertionGeneration(Collection<TypeToken<?>> excludedClassSet) {
         this.excludedClassesFromAssertionGeneration = excludedClassSet
     }
 
