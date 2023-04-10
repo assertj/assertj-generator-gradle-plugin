@@ -1,25 +1,19 @@
 name: Build and test
-on: [ pull_request ]
+on: [ push, pull_request ]
 jobs:
   JVM-Run-Gradle-Check:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: 17
           distribution: 'temurin'
 
       - uses: actions/checkout@v3
-        with:
-          lfs: 'true'
 
-      - name: Verify gradle wrapper
-        uses: gradle/wrapper-validation-action@v1
+      - uses: gradle/gradle-build-action@v2
 
-      - name: Build plugin
-        uses: burrunan/gradle-cache-action@v1
-        with:
-          arguments: check --continue
+      - name: Execute Gradle build
+        run: ./gradlew check --continue
 
 #    TODO Add publish on tag support

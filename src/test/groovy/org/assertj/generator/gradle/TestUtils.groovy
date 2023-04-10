@@ -38,7 +38,7 @@ class TestUtils {
                 implementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
 
                 // https://mvnrepository.com/artifact/org.assertj/assertj-core
-                testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.22.0'
+                testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
                 
                 testImplementation group: 'junit', name: 'junit', version: '4.13.1'
             }
