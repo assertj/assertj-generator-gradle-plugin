@@ -58,7 +58,7 @@ dependencies {
     api(localGroovy())
 
     api("org.assertj:assertj-core:3.24.2")
-    api("org.assertj:assertj-assertions-generator:2.2.0")
+    api("org.assertj:assertj-assertions-generator:2.2.1")
 
     implementation("com.google.guava:guava:28.1-jre")
 
