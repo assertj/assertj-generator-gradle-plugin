@@ -93,7 +93,7 @@ dependencies {
     compile localGroovy()
 
     // https://mvnrepository.com/artifact/org.assertj/assertj-core
-    compile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
+    compile group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
 
     // https://mvnrepository.com/artifact/org.assertj/assertj-assertions-generator
     compile group: 'org.assertj', name: 'assertj-assertions-generator', version: '2.0.0'
