@@ -12,6 +12,8 @@
  */
 package org.assertj.generator.gradle
 
+import org.intellij.lang.annotations.Language
+
 /**
  * Utilities used in test scripts
  */
@@ -23,7 +25,7 @@ class TestUtils {
      * @param content
      * @return
      */
-    static def buildFile(File file, String content) {
+    static def buildFile(File file, @Language("Groovy") String content) {
         file << """
             // Add required plugins and source sets to the sub projects
             plugins { id "org.assertj.generator" } // Note must use this syntax

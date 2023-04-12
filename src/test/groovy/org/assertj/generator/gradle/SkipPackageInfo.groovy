@@ -22,7 +22,7 @@ import org.junit.rules.TemporaryFolder
 import java.nio.file.Path
 import java.nio.file.Paths
 
-import static org.assertj.core.api.Assertions.*
+import static org.assertj.core.api.Assertions.assertThat
 
 /**
  * Checks the behaviour of overriding globals in a project
@@ -34,7 +34,7 @@ class SkipPackageInfo {
 
     File buildFile
     Path generatedPackagePath
-    
+
     @Before
     void setup() {
         buildFile = testProjectDir.newFile('build.gradle')
@@ -105,8 +105,8 @@ class SkipPackageInfo {
             }
             """.stripIndent()
 
-        generatedPackagePath = testProjectDir.newFolder('build', 'generated-src', 'test', 'java').toPath()
-            .resolve(packagePath)
+        generatedPackagePath = testProjectDir.newFolder('build', 'generated-src', 'main-test', 'java').toPath()
+                .resolve(packagePath)
     }
 
 
@@ -135,6 +135,4 @@ class SkipPackageInfo {
                 .as("${generatedPackagePath}/Assertions does not have \'package-info\' in it")
                 .doesNotContain("package-info")
     }
-
-
 }

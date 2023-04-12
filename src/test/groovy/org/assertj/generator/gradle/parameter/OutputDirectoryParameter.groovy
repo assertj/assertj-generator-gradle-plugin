@@ -12,7 +12,7 @@
  */
 package org.assertj.generator.gradle.parameter
 
-import org.assertj.generator.gradle.tasks.config.AssertJGeneratorOptions
+
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Before
@@ -29,7 +29,7 @@ import static org.assertj.generator.gradle.TestUtils.buildFile
 /**
  * Checks the behaviour of overriding globals in a project
  */
-class OutputDirParameter {
+class OutputDirectoryParameter {
 
     @Rule
     public final TemporaryFolder testProjectDir = new TemporaryFolder()
@@ -61,47 +61,14 @@ class OutputDirParameter {
             |}""".stripMargin()
     }
 
-
-    @Test
-    void change_output_dir_globally() {
-        buildFile(buildFile, """
-            assertJ {
-                entryPoints = []
-                outputDir = 'src-gen/${AssertJGeneratorOptions.SOURCE_SET_NAME_TAG}/java' // default: generated-srcs/\${SOURCE_SET_NAME_TAG}/java
-            }
-            
-            sourceSets {
-                main { 
-                    assertJ {} // turn on assertJ generation
-                }
-            }
-            """)
-
-        def result = GradleRunner.create()
-                .withProjectDir(testProjectDir.root)
-                .withDebug(true)
-                .withPluginClasspath()
-                .withArguments('-i', '-s', 'test')
-                .build()
-
-        assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
-        assert result.task(':test').outcome == TaskOutcome.SUCCESS
-
-        assertFiles("main", true)
-    }
-
     @Test
     void change_output_dir_locally() {
         buildFile(buildFile, """            
-            assertJ {
-                entryPoints = []
-            }
-            
             sourceSets {
                 main { 
                     assertJ {
                         // default: generated-srcs/\${SOURCE_SET_NAME_TAG}/java
-                        outputDir = 'src-gen/${AssertJGeneratorOptions.SOURCE_SET_NAME_TAG}/java' 
+                        outputDirectory = file('build/src-gen/foo-bar/java')
                     }
                 }
             }
@@ -117,13 +84,12 @@ class OutputDirParameter {
         assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
         assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
-        assertFiles("main", true)
+        assertFiles("main", "foo-bar", true)
     }
 
-
-    private def assertFiles(String sourceSet, boolean exists) {
-        Path generatedPackagePath = testProjectDir.root.toPath()
-                .resolve("build/src-gen/test${sourceSet == "main" ? "" : sourceSet.capitalize()}/java")
+    private def assertFiles(String sourceSet, String folderName, boolean exists) {
+        def generatedPackagePath = testProjectDir.root.toPath()
+                .resolve("build/src-gen/${folderName}/java")
                 .resolve(packagePath)
 
         def buildPath = testProjectDir.root.toPath().resolve("build")
@@ -133,7 +99,5 @@ class OutputDirParameter {
         assertThat(path.toFile().exists())
             .as("${sourceSet} file: ${buildPath.relativize(path)} exists")
             .isEqualTo(exists)
-
     }
-
 }

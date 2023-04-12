@@ -140,21 +140,19 @@ class SimpleBuild {
     }
 
     @Test
-    @Ignore("Test fails due to groovy incompatibility")
     void exclude_class() {
 
         TestUtils.buildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ {
-                        exclude '**/org/example/OtherWorld*'
+                        source.exclude '**/org/example/OtherWorld*'
                     }
                 }
             }
         """)
 
         def result = GradleRunner.create()
-                .withGradleVersion("3.5")
                 .withProjectDir(testProjectDir.root)
                 .withDebug(true)
                 .withPluginClasspath()
