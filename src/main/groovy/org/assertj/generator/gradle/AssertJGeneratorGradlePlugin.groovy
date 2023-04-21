@@ -13,7 +13,7 @@
 package org.assertj.generator.gradle
 
 import org.assertj.generator.gradle.internal.tasks.DefaultAssertJGeneratorSourceSet
-import org.assertj.generator.gradle.internal.tasks.config.GlobalAssertJGeneratorOptions
+
 import org.assertj.generator.gradle.tasks.AssertJGenerationTask
 import org.assertj.generator.gradle.tasks.AssertJGeneratorSourceSet
 import org.gradle.api.Plugin
@@ -69,8 +69,6 @@ class AssertJGeneratorGradlePlugin implements Plugin<Project> {
             }
         }
 
-        project.extensions.create("assertJ", GlobalAssertJGeneratorOptions)
-
         def javaPlugin = project.getConvention().getPlugin(JavaPluginConvention)
         // So now we have to go through and add the properties that we want
         javaPlugin.sourceSets.all { sourceSet ->
@@ -118,9 +116,6 @@ class AssertJGeneratorGradlePlugin implements Plugin<Project> {
         }
         
         project.afterEvaluate {
-            // First, figure out global vs. locally scoped configurations
-            assertJSS.defaultFromGlobals(project)
-
             generationTask.configure {
                 outputDir = assertJSS.getOutputDir(sourceSet)
             }

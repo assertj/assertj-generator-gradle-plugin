@@ -141,7 +141,4 @@ public interface AssertJGeneratorOptions {
      * @see #isSkip()
      */
     void setSkip(boolean skip);
-
-    AssertJGeneratorOptions defaultFromGlobals(Project project);
-
 }

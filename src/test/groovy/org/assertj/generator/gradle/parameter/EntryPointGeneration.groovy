@@ -33,7 +33,7 @@ class EntryPointGeneration {
     @Rule
     public final TemporaryFolder testProjectDir = new TemporaryFolder()
 
-    File buildFile
+    private File buildFile
     private Path srcPackagePath
     private Path packagePath
 
@@ -42,6 +42,7 @@ class EntryPointGeneration {
         buildFile = testProjectDir.newFile('build.gradle')
 
         File srcDir = testProjectDir.newFolder('src', 'main', 'java')
+        File testDir = testProjectDir.newFolder('src', 'test', 'java')
 
         packagePath = Paths.get("org/example/")
 
@@ -56,13 +57,31 @@ class EntryPointGeneration {
             |    // Field
             |    public boolean hasSomeBrains = false;
             |}""".stripMargin()
+
+        def testSrcDir = testDir.toPath().resolve(packagePath)
+        testSrcDir.toFile().mkdirs()
+
+        def helloWorldTestJava = testSrcDir.resolve('HelloWorldTest.java')
+        helloWorldTestJava << """
+            |package org.example;
+            |
+            |import org.junit.*;
+            |
+            |public class HelloWorldTest {
+            |    @Test
+            |    public void test() {
+            |      HelloWorld ut = new HelloWorld();
+            |      HelloWorldAssert.assertThat(ut).doesNotHaveSomeBrains();
+            |      
+            |      ut.hasSomeBrains = true;
+            |      HelloWorldAssert.assertThat(ut).hasSomeBrains();
+            |    }
+            |}""".stripMargin()
     }
 
 
     @Test
     void change_generate_from_sourceSet() {
-
-
         TestUtils.buildFile(buildFile, """
             sourceSets {
                 main {
@@ -88,7 +107,7 @@ class EntryPointGeneration {
         assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
         Path generatedPackage = testProjectDir.root.toPath()
-                .resolve("build/generated-src/test/java")
+                .resolve("build/generated-src/main-test/java")
                 .resolve(packagePath)
         def files = ["HelloWorldAssert.java",
                      "Assertions.java",             // Standard
@@ -106,13 +125,11 @@ class EntryPointGeneration {
     void change_generate_from_global() {
 
         TestUtils.buildFile(buildFile, """
-            assertJ {
-                entryPoints = ['bdd']
-            }
-            
             sourceSets {
                 main {
-                    assertJ { }
+                    assertJ { 
+                        entryPoints { only('bdd') }
+                    }
                 }
             }
         """)
@@ -128,14 +145,14 @@ class EntryPointGeneration {
         assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
         Path generatedPackage = testProjectDir.root.toPath()
-                .resolve("build/generated-src/test/java")
+                .resolve("build/generated-src/main-test/java")
                 .resolve(packagePath)
         def files = ["HelloWorldAssert.java",
                      //"Assertions.java",             // Standard
                      "BddAssertions.java",        // BDD
                      //"JUnitSoftAssertions.java",    // JUNIT_SOFT
                      //"SoftAssertions.java"         // SOFT
-                    ]
+        ]
 
         files.each {
             assertThat(generatedPackage.resolve(it)).exists()
@@ -145,21 +162,20 @@ class EntryPointGeneration {
 
     @Test
     void change_entry_point_package() {
-
         TestUtils.buildFile(buildFile, """
-            assertJ {
-                entryPoints {
-                    classPackage = 'org.other'
-                    only 'bdd'
-                }
-            }
-            
             sourceSets {
                 main {
-                    assertJ { }
+                    assertJ {
+                        entryPoints {
+                            classPackage = 'org.other'
+                            only()
+                            
+                            bdd = true
+                        }
+                    }
                 }
             }
-        """)
+        """.stripMargin())
 
         def result = GradleRunner.create()
                 .withProjectDir(testProjectDir.root)
@@ -172,21 +188,18 @@ class EntryPointGeneration {
         assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
         Path generatedSrcDir = testProjectDir.root.toPath()
-                .resolve("build/generated-src/test/java")
+                .resolve("build/generated-src/main-test/java")
 
         Path generatedPackageDir = generatedSrcDir.resolve(packagePath)
         Path otherPackageDir = generatedSrcDir.resolve("org/other/")
 
-        assertThat(generatedPackageDir.resolve("HelloWorldAssert.java")).exists()
-        assertThat(otherPackageDir.resolve("BddAssertions.java")).exists()
+        assert generatedPackageDir.resolve("HelloWorldAssert.java").toFile().exists()
+        assert otherPackageDir.resolve("BddAssertions.java").toFile().exists()
     }
 
     @Test
     void change_entry_point_package_and_entry_points() {
-
         TestUtils.buildFile(buildFile, """
-            assertJ { }
-
             sourceSets {
                 main {
                     assertJ {
@@ -213,7 +226,7 @@ class EntryPointGeneration {
         assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
         Path generatedSrcDir = testProjectDir.root.toPath()
-                .resolve("build/generated-src/test/java")
+                .resolve("build/generated-src/main-test/java")
 
         Path generatedPackageDir = generatedSrcDir.resolve(packagePath)
         Path otherPackageDir = generatedSrcDir.resolve("org/other/")

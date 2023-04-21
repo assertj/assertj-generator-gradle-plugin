@@ -38,6 +38,7 @@ class TemplateChanges {
     File buildFile
     private Path srcPackagePath
     private Path packagePath
+    private Path resolvedPackagePath
 
     @Before
     void setup() {
@@ -61,6 +62,10 @@ class TemplateChanges {
                 }
             }
             """.stripIndent()
+
+        resolvedPackagePath = testProjectDir.root.toPath()
+                .resolve("build/generated-src/main-test/java")
+                .resolve(packagePath)
     }
 
 
@@ -89,10 +94,7 @@ class TemplateChanges {
         assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
         assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
-        Path generatedAssert = testProjectDir.root.toPath()
-                .resolve("build/generated-src/test/java")
-                .resolve(packagePath)
-                .resolve("HelloWorldAssert.java")
+        Path generatedAssert = resolvedPackagePath.resolve("HelloWorldAssert.java")
 
         assertThat(generatedAssert.text).contains('/* %%% foo %%% */')
 
@@ -102,15 +104,13 @@ class TemplateChanges {
     void change_default_template_from_global() {
 
         TestUtils.buildFile(buildFile, """
-            assertJ {
-                templates {
-                    methods.wholeNumberPrimitive = '${TEMPLATE_CONTENT}'
-                }              
-            }
-            
             sourceSets {
                 main {
-                    assertJ { }
+                    assertJ { 
+                        templates {
+                           methods.wholeNumberPrimitive = '${TEMPLATE_CONTENT}'
+                        }
+                    }
                 }
             }
         """)
@@ -126,10 +126,7 @@ class TemplateChanges {
         assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
         assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
-        Path generatedAssert = testProjectDir.root.toPath()
-                .resolve("build/generated-src/test/java")
-                .resolve(packagePath)
-                .resolve("HelloWorldAssert.java")
+        Path generatedAssert = resolvedPackagePath.resolve("HelloWorldAssert.java")
 
         assertThat(generatedAssert.text).contains('/* %%% foo %%% */')
     }
@@ -137,16 +134,14 @@ class TemplateChanges {
     @Test
     void incremental_templates_with_no_changes() {
 
-        TestUtils.buildFile(buildFile, """
-            assertJ {
-                templates {
-                    methods.wholeNumberPrimitive = '${TEMPLATE_CONTENT}'
-                }              
-            }
-            
+        TestUtils.buildFile(buildFile, """            
             sourceSets {
                 main {
-                    assertJ { }
+                    assertJ {
+                        templates {
+                            methods.wholeNumberPrimitive = '${TEMPLATE_CONTENT}'
+                        } 
+                     }
                 }
             }
         """)
@@ -162,10 +157,7 @@ class TemplateChanges {
         assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
         assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
-        Path generatedAssert = testProjectDir.root.toPath()
-                .resolve("build/generated-src/test/java")
-                .resolve(packagePath)
-                .resolve("HelloWorldAssert.java")
+        Path generatedAssert = resolvedPackagePath.resolve("HelloWorldAssert.java")
 
         assertThat(generatedAssert.text).contains('/* %%% foo %%% */')
 
@@ -181,15 +173,13 @@ class TemplateChanges {
     void incremental_templates_after_string_change() {
 
         TestUtils.buildFile(buildFile, """
-            assertJ {
-                templates {
-                    methods { wholeNumberPrimitive = '${TEMPLATE_CONTENT}' }
-                }              
-            }
-            
             sourceSets {
                 main {
-                    assertJ { }
+                    assertJ { 
+                        templates {
+                            methods { wholeNumberPrimitive = '${TEMPLATE_CONTENT}' }
+                        } 
+                    }
                 }
             }
         """)
@@ -205,10 +195,7 @@ class TemplateChanges {
         assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
         assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
-        Path generatedAssert = testProjectDir.root.toPath()
-                .resolve("build/generated-src/test/java")
-                .resolve(packagePath)
-                .resolve("HelloWorldAssert.java")
+        Path generatedAssert = resolvedPackagePath.resolve("HelloWorldAssert.java")
 
         assertThat(generatedAssert.text).contains('/* %%% foo %%% */')
 
@@ -217,15 +204,15 @@ class TemplateChanges {
         def NEW_TEMPLATE_CONTENT = '/* % NEW CONTENT % */'
         buildFile.delete()
         TestUtils.buildFile(buildFile, """
-            assertJ {
-                templates {
-                    methods.wholeNumberPrimitive = '${NEW_TEMPLATE_CONTENT}'
-                }              
-            }
-            
             sourceSets {
                 main {
-                    assertJ { }
+                    assertJ { 
+                        templates {
+                            methods {
+                                wholeNumberPrimitive = '${NEW_TEMPLATE_CONTENT}'
+                            }
+                        }
+                    }
                 }
             }
         """)
@@ -240,18 +227,14 @@ class TemplateChanges {
 
     @Test
     void incremental_templates_change_type() {
-
-        
         TestUtils.buildFile(buildFile, """
-            assertJ {
-                templates {
-                    methods { wholeNumberPrimitive = '${TEMPLATE_CONTENT}' }
-                }              
-            }
-            
             sourceSets {
                 main {
-                    assertJ { }
+                    assertJ { 
+                        templates {
+                            methods { wholeNumberPrimitive = '${TEMPLATE_CONTENT}' }
+                        }  
+                    }
                 }
             }
         """)
@@ -267,10 +250,7 @@ class TemplateChanges {
         assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
         assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
-        Path generatedAssert = testProjectDir.root.toPath()
-                .resolve("build/generated-src/test/java")
-                .resolve(packagePath)
-                .resolve("HelloWorldAssert.java")
+        Path generatedAssert = resolvedPackagePath.resolve("HelloWorldAssert.java")
 
         assertThat(generatedAssert.text).contains('/* %%% foo %%% */')
 
@@ -281,20 +261,18 @@ class TemplateChanges {
         File templateFolder = testProjectDir.newFolder('templates')
         File content = templateFolder.toPath().resolve("template.txt").toFile()
         content << NEW_TEMPLATE_CONTENT
-        
+
         def contentPath = testProjectDir.root.toPath().relativize(content.toPath()).toString().replace('\\', '/')
-        
+
         buildFile.delete()
         TestUtils.buildFile(buildFile, """
-            assertJ {
-                templates {
-                    methods.wholeNumberPrimitive = file('${contentPath}')
-                }              
-            }
-            
             sourceSets {
                 main {
-                    assertJ { }
+                    assertJ {
+                        templates {
+                            methods { wholeNumberPrimitive = file('${contentPath}') }
+                        }  
+                    }
                 }
             }
         """)
@@ -309,23 +287,21 @@ class TemplateChanges {
 
     @Test
     void incremental_templates_after_file_change() {
-        
+
         File templateFolder = testProjectDir.newFolder('templates')
         File content = templateFolder.toPath().resolve("template.txt").toFile()
         content << TEMPLATE_CONTENT
-        
+
         def contentPath = testProjectDir.root.toPath().relativize(content.toPath()).toString().replace('\\', '/')
 
         TestUtils.buildFile(buildFile, """
-            assertJ {
-                templates {
-                    methods { wholeNumberPrimitive = file("${contentPath}") }
-                }              
-            }
-            
             sourceSets {
                 main {
-                    assertJ { }
+                     assertJ {
+                        templates {
+                            methods { wholeNumberPrimitive = file("${contentPath}") }
+                        }              
+                    }
                 }
             }
         """)
@@ -341,10 +317,7 @@ class TemplateChanges {
         assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
         assert result.task(':test').outcome == TaskOutcome.SUCCESS
 
-        Path generatedAssert = testProjectDir.root.toPath()
-                .resolve("build/generated-src/test/java")
-                .resolve(packagePath)
-                .resolve("HelloWorldAssert.java")
+        Path generatedAssert = resolvedPackagePath.resolve("HelloWorldAssert.java")
 
         assertThat(generatedAssert.text).contains('/* %%% foo %%% */')
 
@@ -366,15 +339,13 @@ class TemplateChanges {
     void bad_template_name_should_fail() {
 
         TestUtils.buildFile(buildFile, """
-            assertJ {
-                templates {
-                    methods.wholeNumberAssertion = '${TEMPLATE_CONTENT}'
-                }              
-            }
-            
             sourceSets {
                 main {
-                    assertJ { }
+                    assertJ {
+                        templates {
+                            methods { wholeNumberAssertion = '${TEMPLATE_CONTENT}' }
+                        }   
+                    }
                 }
             }
         """)
@@ -385,7 +356,7 @@ class TemplateChanges {
                 .withPluginClasspath()
                 .withArguments('-i', '-s', 'generateAssertJ')
                 .buildAndFail()
-        
+
         assert result.output.contains("wholeNumberAssertion")
     }
 
