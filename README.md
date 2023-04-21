@@ -9,8 +9,8 @@ This is the source for the Gradle plugin for the
 [AssertJ Generator](http://joel-costigliola.github.io/assertj/assertj-assertions-generator.html). This plugin leverages
 existing Gradle [SourceSet](https://docs.gradle.org/current/dsl/org.gradle.api.tasks.SourceSet.html) API to make it
 easier to integrate the AssertJ Generator into existing Gradle-based projects. The configurations available mimic those
-provided by the [AssertJ Generator Maven Plugin](http://joel-costigliola.github.io/assertj/assertj-assertions-generator-maven-plugin.html).
-
+provided by
+the [AssertJ Generator Maven Plugin](http://joel-costigliola.github.io/assertj/assertj-assertions-generator-maven-plugin.html).
 
 ## Quick Start
 
@@ -21,26 +21,26 @@ This plugin requires Gradle 4.0.
 
 ```gradle
 plugins {
-    id 'org.assertj.generator' version '0.0.6b'
+  id 'org.assertj.generator' version '0.0.6b'
 }
 
 sourceSets {
-    main {
-        // must specify assertJ block to have it applied
-        assertJ { }
-    }
+  main {
+      // must specify assertJ block to have it applied
+      assertJ { }
+  }
 }
 
 // add some classpath dependencies
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    // https://mvnrepository.com/artifact/org.assertj/assertj-core
-    testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
+  // https://mvnrepository.com/artifact/org.assertj/assertj-core
+  testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
 
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+  testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 ```
 
@@ -49,13 +49,15 @@ dependencies {
 Primary configuration of included/excluded files is done via the same mechanisms that are used for Gradle's SourceSet
 DSL. For explanation on how filters work, please review the
 [Java Plugin Tutorial for Gradle](https://docs.gradle.org/current/userguide/java_plugin.html#sec:changing_java_project_layout).
-This plugin utilizes the filters to gather classes to run against the generator. **This is different than how the AssertJ
+This plugin utilizes the filters to gather classes to run against the generator. **This is different than how the
+AssertJ
 Generator normally functions** -- this plugin does not work on class/package names, but folder/file patterns like the
 Java plugin.
 
 ### Plugin Version
 
-The plugin version is tied to the version of the [AssertJ Generator](http://joel-costigliola.github.io/assertj/assertj-assertions-generator.html).
+The plugin version is tied to the version of
+the [AssertJ Generator](http://joel-costigliola.github.io/assertj/assertj-assertions-generator.html).
 The version of the generator used will always match the plugin's version.
 
 ### Scope: Local vs. Global
@@ -93,56 +95,32 @@ The following example turns on generation for _only_ `main` All classes found wi
 Assertion generated. This is the recommended way to turn on generation for source sets.
 
 ```gradle
-assertJ {
-    // Add any configuration options to apply to all source sets here
-}
-
 sourceSets {
-    main {
-        assertJ { } // sets skip = false for the "main" sourceSet
-    }
-    test { }
+  main {
+    assertJ { } // sets skip = false for the "main" sourceSet
+  }
+  test { }
 }
 ```
 
 If debugging a build, it may be useful to turn off generation for a `sourceSet`. To do this, inside the configuration
- block, set `skip = true`.
+block, set `skip = true`.
 
 ```gradle
-assertJ {
-    // Add any configuration options to apply to all source sets here
-}
-
 sourceSets {
-    main {
-        assertJ { } // sets skip = false for the "main" sourceSet
+  main {
+    assertJ { } // sets skip = false for the "main" sourceSet
+  }
+
+  brokenGeneration {
+    assertJ {
+      skip = true // no assertions will be generated for
+                  // "brokenGeneration"
+      // other parameters follow, order of assignment of different
+      // parameters does not matter, like with gradle
     }
-
-    brokenGeneration {
-        assertJ {
-            skip = true // no assertions will be generated for
-                        // "brokenGeneration"
-            // other parameters follow, order of assignment of different
-            // parameters does not matter, like with gradle
-        }
-    }
-    test { }
-}
-```
-
-The following example turns on generation for `main` and `test` without adding configuration blocks. Any class found
- within `main` and `test` will have an Assertion generated. This is **not recommended** as it can lead to excessive
- generation and unnecessary slowdowns.
-
-```gradle
-assertJ {
-    // Add any configuration options to apply to all source sets here
-    skip = false // default: true
-}
-
-sourceSets {
-    main { }
-    test { }
+  }
+  test { }
 }
 ```
 
@@ -161,15 +139,14 @@ The following example changes the output directory for _all_ source sets to be
 scope.
 
 ```gradle
-assertJ {
-    // default: generated-srcs/${SOURCE_SET_NAME_TAG}/java
-    outputDir = "src-gen/${SOURCE_SET_NAME_TAG}/java"
-}
-
 sourceSets {
-    main {
-        assertJ {} // turn on assertJ generation
-    }
+  main {
+    // turn on assertJ generation
+    assertJ { 
+      // default: generated-srcs/${SOURCE_SET_NAME_TAG}/java
+      outputDir = "src-gen/${SOURCE_SET_NAME_TAG}/java"
+    } 
+  }
 }
 ```
 
@@ -193,61 +170,59 @@ The following example replaces the whole number field with a custom template for
 remain unaffected.
 
 ```gradle
-assertJ { }
-
 sourceSets {
-    main {
-        assertJ {
-            templates {
-                methods {
-                  wholeNumberPrimitive = 'public get${Property}() { }'
-                }
-            }
+  main {
+    assertJ {
+      templates {
+        methods {
+          wholeNumberPrimitive = 'public get${Property}() { }'
         }
+      }
     }
+  }
 }
 ```
 
-The following example changes the template to a `file()` template for _all_ source sets.
+The following example changes the template to a `file()` template for the `main` source sets.
+
 ```gradle
-assertJ {
-    templates {
+sourceSets {
+  main {
+    assertJ {
+      templates {
         // Set the template to file content: ./wholeNumberOverride.txt
         methods {
-            wholeNumberPrimitive = file('wholeNumberOverride.txt')
+          wholeNumberPrimitive = file('wholeNumberOverride.txt')
         }
+      } 
     }
-}
-
-sourceSets {
-    main {
-        assertJ { }
-    }
+  }
 }
 ```
 
 The `templateDir` is not a scope-override property. If set, it only applies to the block it is defined within. This was
- intentionally done to remove ambiguity. Additionally, this example can be applied to local scopes.
+intentionally done to remove ambiguity. Additionally, this example can be applied to local scopes.
 
 ```gradle
 assertJ {
-    templates {
-        // Set all templates in this block to be relative to the folder specified
-        dir = "${projectDir}/gradle/other-templates"
-
-        // Change the file content to:
-        //      ${projectDir}/gradle/other-templates/wholeNumberOverride.txt
-        wholeNumberAssertion = file('wholeNumberOverride.txt')
-    }
+    
 }
 
 sourceSets {
-    main {
-        assertJ { }
+  main {
+    assertJ {
+      templates {
+        // Set all templates in this block to be relative to the folder specified
+        dir = "${projectDir}/gradle/other-templates"
+  
+        // Change the file content to:
+        //      ${projectDir}/gradle/other-templates/wholeNumberOverride.txt
+        wholeNumberAssertion = file('wholeNumberOverride.txt')
+      }         
     }
+  }
 }
 ```
-
 
 #### P: entryPoints - `EntryPointsGeneratorOptions`
 
@@ -258,12 +233,12 @@ The [AssertJ Generator - Entry Points](http://joel-costigliola.github.io/assertj
 explains how these work and what is expected to be generated for each entry point. The following table shows a mapping
 value to entry point:
 
-| Value       | Enum Value  | Entry Point |
-|:------------|:------------|:------------|
-| `bdd`       | `BDD`       | [BDD style](http://joel-costigliola.github.io/assertj/assertj-core-news.html#assertj-core-1.6.0-bdd-assertions-style) |
-| `standard`  | `STANDARD`  | [Standard assertions style](http://joel-costigliola.github.io/assertj/assertj-assertions-generator.html#generated-entry-points) |
-| `junitSoft` | `JUNIT_SOFT`| [JUnit Soft](http://joel-costigliola.github.io/assertj/assertj-core-features-highlight.html#soft-assertions) |
-| `soft`      | `SOFT`      | [Soft](http://joel-costigliola.github.io/assertj/assertj-core-features-highlight.html#soft-assertions)
+| Value       | Enum Value   | Entry Point                                                                                                                     |
+|:------------|:-------------|:--------------------------------------------------------------------------------------------------------------------------------|
+| `bdd`       | `BDD`        | [BDD style](http://joel-costigliola.github.io/assertj/assertj-core-news.html#assertj-core-1.6.0-bdd-assertions-style)           |
+| `standard`  | `STANDARD`   | [Standard assertions style](http://joel-costigliola.github.io/assertj/assertj-assertions-generator.html#generated-entry-points) |
+| `junitSoft` | `JUNIT_SOFT` | [JUnit Soft](http://joel-costigliola.github.io/assertj/assertj-core-features-highlight.html#soft-assertions)                    |
+| `soft`      | `SOFT`       | [Soft](http://joel-costigliola.github.io/assertj/assertj-core-features-highlight.html#soft-assertions)                          |
 
 By default, only the `standard` style is turned on. To adjust this, simply set the values to `true` within the
 `entryPoints` closure.
@@ -271,26 +246,25 @@ By default, only the `standard` style is turned on. To adjust this, simply set t
 ```gradle
 // For all source sets:
 assertJ {
-    entryPoints {
-        standard = false // No more standard generation
-        bdd = true       // Turn on BDD
-        junitSoft = true // and JUnit Soft
-    }
+    
 }
 
 sourceSets {
-    main {
-        assertJ { }
+  main {
+    assertJ {
+      entryPoints {
+        standard = false // No more standard generation
+        bdd = true       // Turn on BDD
+        junitSoft = true // and JUnit Soft
+      } 
     }
+  }
 }
 ```
 
 A useful trick to turn on _only_ a set of values is to just set the `entryPoints` to a collection of types:
 
 ```gradle
-// For all source sets:
-assertJ { }
-
 sourceSets {
     main {
         assertJ {
@@ -303,9 +277,6 @@ sourceSets {
 Or within the `entryPoints` closure:
 
 ```gradle
-// For all source sets:
-assertJ { }
-
 sourceSets {
     main {
         assertJ {
@@ -335,10 +306,11 @@ This plugin injects itself where it is needed for complete compilation.
 ## Alternatives
 
 There exists several other alternative Gradle plugins that perform the same functionality as this one.
-Currently known:
+Currently, known:
 
 * [opengl-8080/assertjGen-gradle-plugin](https://github.com/opengl-8080/assertjGen-gradle-plugin) - built to wrap the
-  example provided by @joel-costigiola, [here](https://github.com/joel-costigliola/assertj-assertions-generator/blob/master/src/main/scripts/build.gradle)
+  example provided by
+  @joel-costigiola, [here](https://github.com/joel-costigliola/assertj-assertions-generator/blob/master/src/main/scripts/build.gradle)
   which does not allow for configuration. This plugin does _not_ tie the plugin to a specific version of the AssertJ
   Generator
 * [fhermansson/assertj-generator-gradle-plugin](https://github.com/fhermansson/assertj-generator-gradle-plugin) - only
