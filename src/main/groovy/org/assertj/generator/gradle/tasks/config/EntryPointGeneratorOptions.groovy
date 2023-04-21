@@ -27,7 +27,7 @@ class EntryPointGeneratorOptions implements Iterable<AssertionsEntryPointType>, 
 
     // Ideally, this should be final, however due to the way ObjectInputStream works we have to make it
     // non-final and reassign it. The default initialization is never called :(
-    private Set<AssertionsEntryPointType> entryPoints = EnumSet.noneOf(AssertionsEntryPointType)
+    private Set<AssertionsEntryPointType> entryPoints = EnumSet.of(AssertionsEntryPointType.STANDARD)
 
     /**
      * An optional package name for the Assertions entry point class. If omitted, the package will be determined
