@@ -64,6 +64,8 @@ dependencies {
   implementation(gradleKotlinDsl())
   implementation("com.google.guava:guava:31.1-jre")
 
+  testCompileOnly("org.jetbrains:annotations:24.0.1")
+
   testImplementation(gradleTestKit())
   testImplementation("junit:junit:4.13.2")
 }

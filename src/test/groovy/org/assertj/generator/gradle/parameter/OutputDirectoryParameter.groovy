@@ -12,7 +12,6 @@
  */
 package org.assertj.generator.gradle.parameter
 
-
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Before
