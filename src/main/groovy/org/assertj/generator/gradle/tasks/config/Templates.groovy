@@ -19,6 +19,11 @@ import org.assertj.core.util.Files
 import org.assertj.generator.gradle.internal.tasks.AssertionsGeneratorReport
 import org.assertj.generator.gradle.util.Either
 import org.gradle.api.Action
+import org.gradle.api.Project
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
+
+import javax.inject.Inject
 
 import static org.assertj.assertions.generator.Template.Type.*
 
@@ -35,11 +40,11 @@ class Templates implements Serializable {
 
     /**
      * Class-level templates. 
-     * 
+     *
      * @see ClassTemplates
      */
     ClassTemplates classes = new ClassTemplates()
-    
+
     def classes(Action<? extends ClassTemplates> action) {
         action.execute(classes)
         this
@@ -59,7 +64,7 @@ class Templates implements Serializable {
      * @see MethodTemplates
      */
     MethodTemplates methods = new MethodTemplates()
-    
+
     def methods(Action<? extends MethodTemplates> action) {
         action.execute(methods)
         this
@@ -79,81 +84,60 @@ class Templates implements Serializable {
      * @see EntryPointTemplates
      */
     EntryPointTemplates entryPoints = new EntryPointTemplates()
-    
+
     def entryPoints(Action<? extends EntryPointTemplates> action) {
         action.execute(entryPoints)
         this
     }
 
     def entryPoints(Closure closure) {
-        
+
         // DO NOT USE ConfigureUtil.configure() it will not allow us to override the `setProperty()` method via the
         // mixin. 
         closure.delegate = this.entryPoints
         closure.run()
         this
     }
-    
-    private final List<TemplateHandler> handlers
+
+    private final List<TemplateHandler> handlers = [classes, methods, entryPoints]
 
     /**
-     * Gets all files associated with templates. This is used for building up dependencies. 
-     * @return Possibly empty List of files
+     * All files associated with templates. This is used for building up dependencies.
      */
-    def getFiles() {
-        List<File> files = handlers.collect { it.files }.flatten() as List<File>
-            
-        if (dir) {
-            // resolve all of them if there is a directory
-            def dirPath = dir.toPath()
-            files = files.collect {
-                dirPath.resolve(it.toPath()).toFile()
-            }
-        }
-        
-        files
-    }
-    
-    Templates() {
-        handlers = new ArrayList<>(3)
-        handlers.add(classes)
-        handlers.add(methods)
-        handlers.add(entryPoints)
-    }
+    ListProperty<File> templateFiles
 
     /**
-     * Does a shallow copy of the fields from {@code other} into {@code this}
-     * @param other
+     * All template strings that have been set by a user.
      */
-    void copyFrom(Templates other) {
-        this.dir = other.dir
-        
-        // Directly copy all the property values for the handlers
-        handlers.each { handler ->
-            handler.metaClass.properties.each { prop ->
-                def fromOther = prop.getProperty(other)
-                if (fromOther) {
-                    prop.setProperty(this, fromOther)
+    ListProperty<String> templateStrings
+
+    @Inject
+    Templates(ObjectFactory objects, Project project) {
+        templateStrings = objects.listProperty(String)
+
+        def handlers = this.handlers
+        templateStrings.set(
+                project.provider {
+                    handlers.collectMany { it.strings }
                 }
-            }
-        }
-    }
+        )
 
-    /**
-     * Defaults all the values in {@code defaults} into {@code this}
-     * @param defaults Default values
-     */
-    void defaults(Templates defaults) {
-        if (!this.dir) {
-            this.dir = defaults.dir
-        }
-        // Directly override if not set
-        this.metaClass.properties.findAll { v -> TemplateHandler.class.isAssignableFrom(v.type) }
-            .each { prop -> 
-                TemplateHandler handler = prop.getProperty(this) as TemplateHandler
-                TemplateHandler defHandler = prop.getProperty(defaults) as TemplateHandler
-                handler.defaultFrom(defHandler)
-            }
+        templateFiles = objects.listProperty(File)
+        templateFiles.set(
+                project.provider {
+                    List<File> files = handlers.collectMany { it.files }
+
+                    if (dir) {
+                        // resolve all of them if there is a directory
+                        def dirPath = dir.toPath()
+                        files = files.collect {
+                            dirPath.resolve(it.toPath()).toFile()
+                        }
+                    }
+
+                    files
+                }
+        )
     }
 
     /**
@@ -168,19 +152,19 @@ class Templates implements Serializable {
         // load any templates overridden by the user
         List<Template> userTemplates = new ArrayList<>()
         handlers.each { handler -> handler.getTemplates(userTemplates, report) }
-        
+
         return userTemplates
     }
 
     private void loadUserTemplate(Either<File, String> userTemplate, Template.Type type, String templateDescription,
-                          List<Template> userTemplates, AssertionsGeneratorReport report) {
+                                  List<Template> userTemplates, AssertionsGeneratorReport report) {
         if (userTemplate) {
             try {
                 final String templateContent
                 if (userTemplate.leftValue) {
-                    File templateFile = dir.toPath().resolve(userTemplate.left.toPath()).toFile() 
+                    File templateFile = dir.toPath().resolve(userTemplate.left.toPath()).toFile()
                     templateContent = Files.contentOf(templateFile, CharEncoding.UTF_8)
-                    
+
                     report.registerUserTemplate("Using custom template for " + templateDescription + " loaded from "
                             + templateFile)
                 } else {
@@ -188,7 +172,7 @@ class Templates implements Serializable {
                     report.registerUserTemplate("Using custom template for " + templateDescription
                             + " loaded from raw String")
                 }
-                
+
                 userTemplates.add(new Template(type, templateContent))
             } catch (Exception ignored) {
                 // best effort : if we can't read user template, use the default one.
@@ -198,39 +182,24 @@ class Templates implements Serializable {
             }
         }
     }
-    
+
     /**
      * Used to reuse some information within the template "categories"
-     * @param <T> CRTP
+     * @param <T>       CRTP
      */
-    private abstract class TemplateHandler<T extends TemplateHandler<T>> implements Either.EitherPropertyMixin {
+    private abstract class TemplateHandler implements Either.EitherPropertyMixin {
         abstract def getTemplates(List<Template> userTemplates, AssertionsGeneratorReport report)
-        
+
         List<File> getFiles() {
             getLeftProperties(File.class)
         }
 
-        /**
-         * Read values from defaults and write them to the properties inside {@code this}
-         * @param defaults
-         */
-        void defaultFrom(T defaults) {
-            if (defaults && !this.is(defaults)) {
-                defaults.metaClass.properties.findAll{ prop ->
-                    Either.class.isAssignableFrom(prop.type) 
-                }.each { prop ->
-                    def defValue = prop.getProperty(defaults)
-                    def currValue = prop.getProperty(this)
-                    if (defValue && !currValue) {
-                        prop.setProperty(this, defValue)
-                    }
-                }
-            }
+        List<String> getStrings() {
+            getRightProperties(String.class)
         }
 
-        
         void writeOutputStream(ObjectOutputStream s) throws IOException {
-            this.metaClass.properties.findAll{ prop ->
+            this.metaClass.properties.findAll { prop ->
                 Either.class.isAssignableFrom(prop.type)
             }.each {
                 s.writeObject(it.getProperty(this))
@@ -238,7 +207,7 @@ class Templates implements Serializable {
         }
 
         void fromInputStream(ObjectInputStream s) throws IOException, ClassNotFoundException {
-            this.metaClass.properties.findAll{ prop ->
+            this.metaClass.properties.findAll { prop ->
                 Either.class.isAssignableFrom(prop.type)
             }.each { prop ->
                 prop.setProperty(this, s.readObject())
@@ -251,12 +220,12 @@ class Templates implements Serializable {
      * Class-level templates
      */
     @EqualsAndHashCode
-    class ClassTemplates extends TemplateHandler<ClassTemplates> implements Serializable {
+    class ClassTemplates extends TemplateHandler implements Serializable {
 
         Either<File, String> assertionClass
         Either<File, String> hierarchicalConcrete
         Either<File, String> hierarchicalAbstract
-        
+
         @Override
         def getTemplates(List<Template> userTemplates, AssertionsGeneratorReport report) {
             // @format:off
@@ -271,7 +240,7 @@ class Templates implements Serializable {
      * Method-level templates
      */
     @EqualsAndHashCode
-    class MethodTemplates extends TemplateHandler<MethodTemplates> implements Serializable {
+    class MethodTemplates extends TemplateHandler implements Serializable {
 
         Either<File, String> object
         Either<File, String> booleanPrimitive
@@ -314,7 +283,7 @@ class Templates implements Serializable {
      * Entry point templates
      */
     @EqualsAndHashCode
-    class EntryPointTemplates extends TemplateHandler<EntryPointTemplates> implements Serializable {
+    class EntryPointTemplates extends TemplateHandler implements Serializable {
 
         Either<File, String> assertions
         Either<File, String> assertionMethod
@@ -327,8 +296,8 @@ class Templates implements Serializable {
         @Override
         def getTemplates(List<Template> userTemplates, AssertionsGeneratorReport report) {
             // @format:off
-            loadUserTemplate(assertions,ASSERTIONS_ENTRY_POINT_CLASS, "'assertions entry point class'", userTemplates, report)
-            loadUserTemplate(assertionMethod,ASSERTION_ENTRY_POINT,  "'assertions entry point method'", userTemplates, report)
+            loadUserTemplate(assertions, ASSERTIONS_ENTRY_POINT_CLASS, "'assertions entry point class'", userTemplates, report)
+            loadUserTemplate(assertionMethod, ASSERTION_ENTRY_POINT, "'assertions entry point method'", userTemplates, report)
             loadUserTemplate(soft, SOFT_ASSERTIONS_ENTRY_POINT_CLASS, "'soft assertions entry point class'", userTemplates, report)
             loadUserTemplate(junitSoft, JUNIT_SOFT_ASSERTIONS_ENTRY_POINT_CLASS, "'junit soft assertions entry point class'", userTemplates, report)
             loadUserTemplate(softMethod, SOFT_ENTRY_POINT_METHOD_ASSERTION, "'soft assertions entry point method'", userTemplates, report)
@@ -336,11 +305,11 @@ class Templates implements Serializable {
             loadUserTemplate(bddMethod, BDD_ENTRY_POINT_METHOD_ASSERTION, "'BDD assertions entry point method'", userTemplates, report)
             // @format:on
         }
-        
+
     }
-    
+
     // Serialization code: 
-    
+
     private void writeObject(ObjectOutputStream s) throws IOException {
         s.writeObject(dir)
         classes.writeOutputStream(s)
@@ -354,7 +323,7 @@ class Templates implements Serializable {
         // This awkward pattern is because the constructor is not called
         // when deserialization occurs. This could be solved with forced reflection-based
         // assignment, but that's asking for trouble..
-        
+
         classes = new ClassTemplates()
         classes.fromInputStream(s)
         entryPoints = new EntryPointTemplates()

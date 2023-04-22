@@ -20,10 +20,11 @@ import org.assertj.generator.gradle.tasks.config.EntryPointGeneratorOptions
 import org.assertj.generator.gradle.tasks.config.Templates
 import org.gradle.api.Action
 import org.gradle.api.file.SourceDirectorySet
-import org.gradle.api.internal.file.SourceDirectorySetFactory
-import org.gradle.api.internal.tasks.DefaultSourceSet
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.ConfigureUtil
+
+import javax.inject.Inject
 
 /**
  * Simple, default implementation of {@link AssertJGeneratorSourceSet}
@@ -38,10 +39,14 @@ class DefaultAssertJGeneratorSourceSet extends DefaultAssertJGeneratorOptions im
 
     private final SourceDirectorySet assertJDirectorySet
 
-    DefaultAssertJGeneratorSourceSet(SourceSet sourceSet, SourceDirectorySetFactory sourceDirectorySetFactory) {
-        super()
+    @Inject
+    DefaultAssertJGeneratorSourceSet(ObjectFactory objectFactory, SourceSet sourceSet) {
+        super(objectFactory)
         this.name = sourceSet.name
-        this.assertJDirectorySet = sourceDirectorySetFactory.create("${((DefaultSourceSet) sourceSet).displayName} AssertJ Sources")
+        this.assertJDirectorySet = objectFactory.sourceDirectorySet(
+                "$sourceSet AssertJ Sources",
+                sourceSet.name,
+        )
 
         // We default to the java directory
         assertJ.setSrcDirs(["src/${this.name}/java"])
