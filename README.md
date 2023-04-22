@@ -126,7 +126,7 @@ sourceSets {
 
 #### P: outputDir - `File`
 
-Default: `${buildDir}generated-srcs/${sourceSet.getTaskName('test', '')}/java`
+Default: `${buildDir}/generated-srcs/${sourceSet.name}-test/java`
 
 The root directory where all generated files will be placed (within sub-folders for packages).
 
@@ -144,7 +144,7 @@ sourceSets {
     // turn on assertJ generation
     assertJ { 
       // default: generated-srcs/${SOURCE_SET_NAME_TAG}/java
-      outputDir = "src-gen/${SOURCE_SET_NAME_TAG}/java"
+      outputDir = file("src-gen/main-test/java")
     } 
   }
 }
