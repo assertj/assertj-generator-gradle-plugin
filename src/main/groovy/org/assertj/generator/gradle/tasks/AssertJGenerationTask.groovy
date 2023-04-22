@@ -23,9 +23,12 @@ import org.assertj.generator.gradle.internal.tasks.AssertionsGeneratorReport
 import org.assertj.generator.gradle.tasks.config.AssertJGeneratorOptions
 import org.gradle.api.file.*
 import org.gradle.api.logging.Logging
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 
+import javax.inject.Inject
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -39,20 +42,20 @@ class AssertJGenerationTask extends SourceTask {
     private static final logger = Logging.getLogger(AssertJGenerationTask)
 
     @Classpath
-    FileCollection generationClasspath
-
-    @Input
-    AssertJGeneratorOptions assertJOptions
+    final ConfigurableFileCollection generationClasspath
 
     @InputFiles
-    List<File> getTemplateFiles() {
-        assertJOptions.templates.files
-    }
+    @Classpath
+    final ListProperty<File> templateFiles
+
+    @Input
+    final ListProperty<String> templateStrings
 
     @OutputDirectory
     File outputDir
 
     private SourceDirectorySet sourceDirectorySet
+    private final AssertJGeneratorOptions assertJOptions
 
     void setOutputDir(Path newDir) {
         this.outputDir = project.buildDir.toPath()
@@ -62,6 +65,17 @@ class AssertJGenerationTask extends SourceTask {
 
     void setOutputDir(File newDir) {
         setOutputDir(newDir.toPath())
+    }
+
+    @Inject
+    AssertJGenerationTask(ObjectFactory objects, AssertJGeneratorOptions assertJOptions, AssertJGeneratorSourceSet sourceSet) {
+        this.assertJOptions = assertJOptions
+        this.generationClasspath = objects.fileCollection()
+
+        this.templateFiles = assertJOptions.templates.templateFiles
+        this.templateStrings = assertJOptions.templates.templateStrings
+
+        source = sourceSet.assertJ
     }
 
     @TaskAction
@@ -81,7 +95,7 @@ class AssertJGenerationTask extends SourceTask {
             } else if (sourceFiles.contains(change.file)) {
                 // source file changed
                 classesToGenerate += change.file
-            } else if (templateFiles.contains(change.file)) {
+            } else if (templateFiles.get().contains(change.file)) {
                 fullRegenRequired = true
             }
         }

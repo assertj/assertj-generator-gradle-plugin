@@ -19,9 +19,11 @@ import org.assertj.assertions.generator.AssertionsEntryPointType
 import org.assertj.generator.gradle.tasks.config.AssertJGeneratorOptions
 import org.assertj.generator.gradle.tasks.config.EntryPointGeneratorOptions
 import org.assertj.generator.gradle.tasks.config.Templates
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.ConfigureUtil
 
+import javax.inject.Inject
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -39,15 +41,16 @@ class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Seriali
 
     protected String outputDir
 
-    DefaultAssertJGeneratorOptions() {
+    @Inject
+    DefaultAssertJGeneratorOptions(ObjectFactory objects) {
         this.outputDir = "generated-src/${SOURCE_SET_NAME_TAG}-test/java"
 
         skip = true
         hierarchical = null
-        templates = new Templates()
+        templates = objects.newInstance(Templates)
 
         // default entry points
-        this._entryPoints = new EntryPointGeneratorOptions()
+        this._entryPoints = objects.newInstance(EntryPointGeneratorOptions)
         this._entryPoints.only(AssertionsEntryPointType.STANDARD)
     }
 
