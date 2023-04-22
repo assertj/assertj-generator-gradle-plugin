@@ -190,7 +190,7 @@ class IncrementalBuild {
 
     private def assertFiles(String sourceSet, boolean exists) {
         final Path generatedPackagePath = testProjectDir.root.toPath()
-                .resolve("build/generated-src/test${sourceSet == "main" ? "" : sourceSet.capitalize()}/java")
+                .resolve("build/generated-src/${sourceSet}-test/java")
                 .resolve(packagePath)
 
         def buildPath = testProjectDir.root.toPath().resolve("build")
@@ -207,7 +207,4 @@ class IncrementalBuild {
             it
         }
     }
-
-
-
 }

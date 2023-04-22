@@ -34,7 +34,6 @@ class DefaultAssertJGeneratorSourceSet extends DefaultAssertJGeneratorOptions im
     final String name
     boolean skip
     String entryPointClassPackage
-    EntryPointGeneratorOptions entryPoints
     private File outputDir
 
     private final SourceDirectorySet assertJDirectorySet

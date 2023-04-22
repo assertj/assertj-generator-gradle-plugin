@@ -76,9 +76,8 @@ class SkipParameter {
 
 
     @Test
-    void skip_other_set_from_local() {
+    void skip_other_set() {
         TestUtils.buildFile(buildFile, """
-            assertJ { entryPoints = [] }
             sourceSets {
                 main {
                     assertJ { skip = true }
@@ -101,15 +100,11 @@ class SkipParameter {
 
     @Test
     void generate_default() {
-        TestUtils.buildFile(buildFile, """            
-            assertJ {
-                entryPoints = []
-                
-                skip = false
-            }
-            
+        TestUtils.buildFile(buildFile, """
             sourceSets {
-                main { }
+                main {
+                    assertJ { skip = false }
+                 }
             }
             """)
 
@@ -126,10 +121,9 @@ class SkipParameter {
         assertFiles("main", true)
     }
 
-
     private def assertFiles(String sourceSet, boolean exists) {
         Path generatedPackagePath = testProjectDir.root.toPath()
-                .resolve("build/generated-src/test${sourceSet == "main" ? "" : sourceSet.capitalize()}/java")
+                .resolve("build/generated-src/main-test/java")
                 .resolve(packagePath)
 
         def buildPath = testProjectDir.root.toPath().resolve("build")
@@ -137,9 +131,8 @@ class SkipParameter {
         def path = generatedPackagePath.resolve("${sourceSet.capitalize()}Assert.java")
 
         assertThat(path.toFile().exists())
-            .as("${sourceSet} file: ${buildPath.relativize(path)} exists")
-            .isEqualTo(exists)
+                .as("${sourceSet} file: ${buildPath.relativize(path)} exists")
+                .isEqualTo(exists)
 
     }
-
 }

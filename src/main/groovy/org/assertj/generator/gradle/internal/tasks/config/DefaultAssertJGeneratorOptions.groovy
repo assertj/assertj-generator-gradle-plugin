@@ -16,11 +16,9 @@ import groovy.transform.EqualsAndHashCode
 import groovy.transform.PackageScope
 import groovy.transform.ToString
 import org.assertj.assertions.generator.AssertionsEntryPointType
-import org.assertj.generator.gradle.AssertJGeneratorGradlePlugin
 import org.assertj.generator.gradle.tasks.config.AssertJGeneratorOptions
 import org.assertj.generator.gradle.tasks.config.EntryPointGeneratorOptions
 import org.assertj.generator.gradle.tasks.config.Templates
-import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.ConfigureUtil
 
@@ -30,7 +28,8 @@ import java.nio.file.Paths
 /**
  * Simple, default implementation of {@link AssertJGeneratorOptions}
  */
-@EqualsAndHashCode @ToString
+@EqualsAndHashCode
+@ToString
 class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Serializable {
 
     boolean skip
@@ -41,20 +40,21 @@ class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Seriali
     protected String outputDir
 
     DefaultAssertJGeneratorOptions() {
+        this.outputDir = "generated-src/${SOURCE_SET_NAME_TAG}-test/java"
+
         skip = true
         hierarchical = null
         templates = new Templates()
+
+        // default entry points
+        this._entryPoints = new EntryPointGeneratorOptions()
+        this._entryPoints.only(AssertionsEntryPointType.STANDARD)
     }
 
     Path getOutputDir(SourceSet sourceSet) {
         if (!outputDir) return null
 
-        def path
-        if (sourceSet.name.contains("test")) {
-            path = this.outputDir.replace(SOURCE_SET_NAME_TAG, sourceSet.name)
-        } else {
-            path = this.outputDir.replace(SOURCE_SET_NAME_TAG, sourceSet.getTaskName('test', ''))
-        }
+        def path = this.outputDir.replace(SOURCE_SET_NAME_TAG, sourceSet.name)
 
         Paths.get(path)
     }
@@ -94,7 +94,7 @@ class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Seriali
     }
 
     void setEntryPoints(EntryPointGeneratorOptions newValue) {
-        this.entryPoints = newValue
+        this._entryPoints = newValue
     }
 
     @Override
@@ -115,25 +115,6 @@ class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Seriali
         ConfigureUtil.configure(closure, orCreateEntryPoints)
         this
     }
-    
-    
-
-    @Override
-    AssertJGeneratorOptions defaultFromGlobals(Project project) {
-        GlobalAssertJGeneratorOptions globalOpts =
-                project.extensions.findByName(AssertJGeneratorGradlePlugin.ASSERTJ_GEN_CONFIGURATION_NAME) as GlobalAssertJGeneratorOptions
-
-        if (!this.getOutputDirRaw()) {
-            this.outputDir = globalOpts.outputDir
-        }
-
-        if (!this.entryPoints) {
-            this.entryPoints = globalOpts.entryPoints
-        }
-
-        templates.defaults(globalOpts.templates)
-        this
-    }
 
     private void writeObject(ObjectOutputStream s) throws IOException {
         s.writeObject(outputDir)
@@ -143,11 +124,11 @@ class DefaultAssertJGeneratorOptions implements AssertJGeneratorOptions, Seriali
     }
 
     private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
-        this.outputDir = (String)s.readObject()
+        this.outputDir = (String) s.readObject()
         this.skip = s.readBoolean()
-        this._entryPoints = (EntryPointGeneratorOptions)s.readObject()
+        this._entryPoints = (EntryPointGeneratorOptions) s.readObject()
 
-        Templates templatesFromIn = (Templates)s.readObject()
+        Templates templatesFromIn = (Templates) s.readObject()
         if (templatesFromIn) {
             if (this.templates) {
                 this.templates.copyFrom(templatesFromIn)
