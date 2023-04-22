@@ -67,13 +67,12 @@ class AssertJGenerationTask extends SourceTask {
         source(sourceSet.allJava)
         dependsOn sourceSet.compileJavaTaskName
 
-        generationClasspath = objects.fileCollection()
+        this.generationClasspath = objects.fileCollection()
                 .from(sourceSet.runtimeClasspath)
 
-        outputDir = assertJOptions.outputDir
-
-        templateStrings = assertJOptions.templates.templateStrings
-        templateFiles = assertJOptions.templates.templateFiles
+        this.outputDir = assertJOptions.outputDir
+        this.templateFiles = assertJOptions.templates.templateFiles
+        this.templateStrings = assertJOptions.templates.templateStrings
     }
 
     @TaskAction
@@ -107,7 +106,7 @@ class AssertJGenerationTask extends SourceTask {
         }
 
         if (fullRegenRequired || !inputs.incremental) {
-            project.delete(outputDir.getAsFileTree().files)
+            project.delete(outputDir.asFileTree.files)
             classesToGenerate = sourceFiles
         }
 

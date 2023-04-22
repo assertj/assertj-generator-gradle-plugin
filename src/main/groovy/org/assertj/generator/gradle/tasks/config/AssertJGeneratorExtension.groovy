@@ -35,7 +35,6 @@ class AssertJGeneratorExtension {
      * @return templates value, never {@code null}
      */
     final Templates templates
-
     /**
      * Method used for improving configuration DSL
      *
@@ -46,18 +45,6 @@ class AssertJGeneratorExtension {
         ConfigureUtil.configure(closure, getTemplates());
         return this;
     }
-
-    /**
-     * Skip generating classes, handy way to disable temporarily.
-     * @return true if skipping this set
-     */
-    boolean skip = false
-
-    /**
-     * Flag specifying whether to generate hierarchical assertions. The default is false.
-     * @return true if generating hierarchical
-     */
-    boolean hierarchical = false
 
     /**
      * Contains configuration regarding the "Assertion" entry point class generation. By default, only the "standard"
@@ -110,13 +97,16 @@ class AssertJGeneratorExtension {
     final DirectoryProperty outputDir
 
     /**
-     * Sets the output directory to the path passed.
-     *
-     * @param outputDir File used for an output directory
+     * Flag specifying whether to generate hierarchical assertions. The default is false.
+     * @return true if generating hierarchical
      */
-    void setOutputDir(String outputDir) {
-        this.outputDir.set(project.file(outputDir))
-    }
+    boolean hierarchical = false
+
+    /**
+     * Skip generating classes, handy way to disable temporarily.
+     * @return true if skipping this set
+     */
+    boolean skip = false
 
     private final Project project
 

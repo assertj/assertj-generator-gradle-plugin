@@ -12,7 +12,6 @@
  */
 package org.assertj.generator.gradle
 
-
 import org.assertj.generator.gradle.tasks.AssertJGenerationTask
 import org.assertj.generator.gradle.tasks.config.AssertJGeneratorExtension
 import org.gradle.api.Plugin
@@ -25,6 +24,7 @@ import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSet
 
 import javax.inject.Inject
+
 /**
  * Defines the entry point for applying the AssertJGeneration plugin
  */

@@ -68,7 +68,7 @@ class OutputDirectoryParameter {
                 main { 
                     assertJ {
                         // default: generated-srcs/\${SOURCE_SET_NAME_TAG}/java
-                        outputDir = 'src-gen/foo-bar/java'
+                        outputDir = file('src-gen/foo-bar/java')
                     }
                 }
             }
