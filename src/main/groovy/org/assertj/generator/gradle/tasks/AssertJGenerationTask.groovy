@@ -21,7 +21,10 @@ import org.assertj.assertions.generator.description.converter.ClassToClassDescri
 import org.assertj.assertions.generator.util.ClassUtil
 import org.assertj.generator.gradle.internal.tasks.AssertionsGeneratorReport
 import org.assertj.generator.gradle.tasks.config.AssertJGeneratorOptions
-import org.gradle.api.file.*
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileTree
+import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
@@ -35,7 +38,7 @@ import java.nio.file.Paths
 import static com.google.common.collect.Sets.newLinkedHashSet
 
 /**
- *
+ * Executes AssertJ generation against provided sources using the configured templates.
  */
 class AssertJGenerationTask extends SourceTask {
 
@@ -52,30 +55,24 @@ class AssertJGenerationTask extends SourceTask {
     final ListProperty<String> templateStrings
 
     @OutputDirectory
-    File outputDir
+    final DirectoryProperty outputDir
 
-    private SourceDirectorySet sourceDirectorySet
     private final AssertJGeneratorOptions assertJOptions
 
-    void setOutputDir(Path newDir) {
-        this.outputDir = project.buildDir.toPath()
-                .resolve(newDir)
-                .toFile()
-    }
-
-    void setOutputDir(File newDir) {
-        setOutputDir(newDir.toPath())
-    }
-
     @Inject
-    AssertJGenerationTask(ObjectFactory objects, AssertJGeneratorOptions assertJOptions, AssertJGeneratorSourceSet sourceSet) {
-        this.assertJOptions = assertJOptions
-        this.generationClasspath = objects.fileCollection()
+    AssertJGenerationTask(ObjectFactory objects, SourceSet sourceSet) {
+        description = "Generates AssertJ assertions for the  ${sourceSet.name} sources."
 
+        assertJOptions = sourceSet.extensions.getByType(AssertJGeneratorOptions)
+        source(sourceSet.allJava)
+        dependsOn sourceSet.compileJavaTaskName
+
+        this.generationClasspath = objects.fileCollection()
+                .from(sourceSet.runtimeClasspath)
+
+        this.outputDir = assertJOptions.outputDir
         this.templateFiles = assertJOptions.templates.templateFiles
         this.templateStrings = assertJOptions.templates.templateStrings
-
-        source = sourceSet.assertJ
     }
 
     @TaskAction
@@ -84,7 +81,7 @@ class AssertJGenerationTask extends SourceTask {
             return
         }
 
-        Set<File> sourceFiles = sourceDirectorySet.files
+        Set<File> sourceFiles = source.files
 
         def classesToGenerate = []
         def fullRegenRequired = false
@@ -109,18 +106,28 @@ class AssertJGenerationTask extends SourceTask {
         }
 
         if (fullRegenRequired || !inputs.incremental) {
-            project.delete(outputDir.listFiles())
+            project.delete(outputDir.asFileTree.files)
             classesToGenerate = sourceFiles
         }
 
         def classLoader = new URLClassLoader(generationClasspath.collect { it.toURI().toURL() } as URL[])
 
         def inputClassNames = getClassNames()
-        def classes = ClassUtil.collectClasses(classLoader, inputClassNames.values().toArray(new String[0]))
+        Set<TypeToken<?>> classes = ClassUtil.collectClasses(
+                classLoader,
+                inputClassNames.values().flatten() as String[],
+        )
 
-        def inputClassesToFile = inputClassNames.collectEntries { file, classDef ->
-            [(classes.find { it.type.typeName == classDef }): file]
-        }
+        def classesByTypeName = classes.collectEntries { [(it.type.typeName): it] }
+
+        def inputClassesToFile = inputClassNames
+                .collectMany { file, classDefs ->
+                    classDefs.collect {
+                        [(classesByTypeName[it]): file]
+                    }
+                }
+                .collectEntries()
+
         inputClassesToFile.values().removeAll {
             !classesToGenerate.contains(it)
         }
@@ -130,7 +137,7 @@ class AssertJGenerationTask extends SourceTask {
 
         AssertionsGeneratorReport report = new AssertionsGeneratorReport()
 
-        Path absOutputDir = project.rootDir.toPath().resolve(this.outputDir.toPath())
+        Path absOutputDir = project.rootDir.toPath().resolve(this.outputDir.getAsFile().get().toPath())
         report.setDirectoryPathWhereAssertionFilesAreGenerated(absOutputDir.toFile())
         assertJOptions.templates.getTemplates(report).each {
             generator.register(it)
@@ -139,7 +146,7 @@ class AssertJGenerationTask extends SourceTask {
         try {
             generator.setDirectoryWhereAssertionFilesAreGenerated(absOutputDir.toFile())
 
-            report.setInputClasses(inputClassNames.values())
+            report.setInputClasses(inputClassNames.values().flatten())
 
             Set<TypeToken<?>> filteredClasses = removeAssertClasses(classes)
             report.setExcludedClassesFromAssertionGeneration(Sets.difference(classes, filteredClasses))
@@ -184,15 +191,6 @@ class AssertJGenerationTask extends SourceTask {
         logger.info(report.reportContent)
     }
 
-    @Override
-    void setSource(final FileTree source) {
-        super.setSource(source)
-
-        if (source instanceof SourceDirectorySet) {
-            this.sourceDirectorySet = (SourceDirectorySet) source
-        }
-    }
-
     /**
      * Returns the source for this task, after the include and exclude patterns have been applied. Ignores source files which do not exist.
      *
@@ -205,33 +203,15 @@ class AssertJGenerationTask extends SourceTask {
         super.getSource()
     }
 
-    private def getClassNames() {
-        Map<File, String> fullyQualifiedNames = new HashMap<>(sourceDirectorySet.files.size())
+    private Map<File, Set<String>> getClassNames() {
+        Map<File, Set<String>> fullyQualifiedNames = new HashMap<>(source.files.size())
 
-        for (DirectoryTree tree : sourceDirectorySet.srcDirTrees) {
-            Path root = tree.dir.toPath()
-            tree.visit(new FileVisitor() {
-                @Override
-                void visitDir(FileVisitDetails fileVisitDetails) {}
-
-                @Override
-                void visitFile(FileVisitDetails fileVisitDetails) {
-                    Path file = root.relativize(fileVisitDetails.file.toPath())
-
-                    if (file.fileName != Paths.get("package-info.java")) {
-                        // Ignore package-info.java, it's not supposed to be included..
-
-                        // Remove the extension and replace the dir separator with dots
-                        String outPath = file.toString()
-                        outPath = outPath[0..<outPath.size() - ".java".size()]
-                        outPath = outPath.replace(File.separatorChar, '.' as char)
-
-                        fullyQualifiedNames[fileVisitDetails.file] = outPath
-                    }
-                }
-            })
+        source.visit { FileVisitDetails fileVisitDetails ->
+            Path file = fileVisitDetails.file.toPath()
+            fullyQualifiedNames[fileVisitDetails.file] = AssertJGenerationTask.getClassesInFile(file)
         }
 
+        fullyQualifiedNames.removeAll { it.value.isEmpty() }
         fullyQualifiedNames
     }
 
@@ -244,5 +224,34 @@ class AssertJGenerationTask extends SourceTask {
             }
         }
         return filteredClassList
+    }
+
+    private static def PACKAGE_JAVA_PATH = Paths.get("package-info.java")
+
+    private static Set<String> getClassesInFile(Path path) {
+        if (path.toFile().isDirectory()) return Sets.newHashSet()
+
+        // Ignore package-info.java, it's not supposed to be included.
+        if (path.fileName == PACKAGE_JAVA_PATH) return Sets.newHashSet()
+        def fileName = path.fileName.toString()
+        def extension = fileName.substring(fileName.findLastIndexOf { it == '.' } + 1)
+        def fileNameWithoutExtension = fileName.substring(0, fileName.size() - extension.size() - 1)
+
+        String packageName
+        Set<String> classNames
+
+        switch (extension) {
+            case "java":
+                def lines = path.readLines()
+                def packageLine = lines.find { it.startsWith("package ") }
+
+                packageName = packageLine.substring("package ".size(), packageLine.size() - 1)
+                classNames = Sets.newHashSet(fileNameWithoutExtension)
+                break
+
+            default: throw new IllegalStateException("Unsupported path: $path")
+        }
+
+        return classNames.collect { "$packageName.$it" }.toSet()
     }
 }

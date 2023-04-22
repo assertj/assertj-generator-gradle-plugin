@@ -12,17 +12,11 @@
  */
 package org.assertj.generator.gradle.tasks.config;
 
-import static java.util.stream.Collectors.toList;
-
-import java.io.File;
-import java.nio.file.Path;
-import java.util.Collection;
-
 import groovy.lang.Closure;
+import java.util.Collection;
 import org.assertj.assertions.generator.AssertionGenerator;
 import org.assertj.assertions.generator.AssertionsEntryPointType;
-import org.gradle.api.Project;
-import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.util.ConfigureUtil;
 
 /**
@@ -31,15 +25,11 @@ import org.gradle.util.ConfigureUtil;
  */
 public interface AssertJGeneratorOptions {
 
-    String SOURCE_SET_NAME_TAG = "${sourceSet.testName}";
-
-
     /**
      * Generate generating Soft Assertions entry point class.
      * @return templates value, never {@code null}
      */
     Templates getTemplates();
-
 
     /**
      * Method used for improving configuration DSL
@@ -78,7 +68,7 @@ public interface AssertJGeneratorOptions {
         getEntryPoints().only(values.stream()
                 .map(String::toUpperCase)
                 .map(AssertionsEntryPointType::valueOf)
-                .collect(toList())
+                .toList()
                 .toArray(new AssertionsEntryPointType[0]));
     }
 
@@ -92,27 +82,9 @@ public interface AssertJGeneratorOptions {
 
     /**
      * The root directory where all generated files will be placed (within sub-folders for packages).
-     * @param sourceSet Source set configured for
      * @return File the output directory for {@code sourceSet}
      */
-    Path getOutputDir(SourceSet sourceSet);
-
-    /**
-     * Sets the output directory to a file
-     * @param outputDir File used for an output directory
-     *
-     * @see #setOutputDir(String)
-     */
-    void setOutputDir(File outputDir);
-
-    /**
-     * Sets the output directory to the path passed. When the value is converted, it will replace
-     * {@value #SOURCE_SET_NAME_TAG} with
-     * {@link SourceSet#getTaskName(String, String) SourceSet#getTaskName('test', '')}.
-     *
-     * @param outputDir File used for an output directory
-     */
-    void setOutputDir(String outputDir);
+    DirectoryProperty getOutputDir();
 
     /**
      * Flag specifying whether to generate hierarchical assertions. The default is false.

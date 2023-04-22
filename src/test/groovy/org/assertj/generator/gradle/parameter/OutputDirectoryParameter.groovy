@@ -68,7 +68,7 @@ class OutputDirectoryParameter {
                 main { 
                     assertJ {
                         // default: generated-srcs/\${SOURCE_SET_NAME_TAG}/java
-                        outputDir = 'src-gen/foo-bar/java'
+                        outputDir = file('src-gen/foo-bar/java')
                     }
                 }
             }
@@ -89,7 +89,7 @@ class OutputDirectoryParameter {
 
     private def assertFiles(String sourceSet, String folderName, boolean exists) {
         def generatedPackagePath = testProjectDir.root.toPath()
-                .resolve("build/src-gen/${folderName}/java")
+                .resolve("src-gen/${folderName}/java")
                 .resolve(packagePath)
 
         def buildPath = testProjectDir.root.toPath().resolve("build")

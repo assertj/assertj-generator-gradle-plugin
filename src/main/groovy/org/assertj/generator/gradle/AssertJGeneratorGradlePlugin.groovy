@@ -12,17 +12,13 @@
  */
 package org.assertj.generator.gradle
 
-import org.assertj.generator.gradle.internal.tasks.DefaultAssertJGeneratorSourceSet
+import org.assertj.generator.gradle.internal.tasks.config.DefaultAssertJGeneratorOptions
 import org.assertj.generator.gradle.tasks.AssertJGenerationTask
-import org.assertj.generator.gradle.tasks.AssertJGeneratorSourceSet
-import org.assertj.generator.gradle.tasks.config.AssertJGeneratorOptions
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.internal.plugins.DslObject
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.plugins.Convention
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSet
@@ -69,19 +65,15 @@ class AssertJGeneratorGradlePlugin implements Plugin<Project> {
                 // For each sourceSet we're enacting an action on each one that adds an assertJ generation task to it
                 logger.info("sourceSet: ${sourceSet} creating tasks")
 
-                // Get the convention and add the properties
-                Convention sourceSetConvention = new DslObject(sourceSet).convention
-
-                // Create the assertJ closure within the source set, e.g. main { assertJ { } }
-                def assertJSourceSet = objects.newInstance(
-                    DefaultAssertJGeneratorSourceSet,
+                sourceSet.extensions.create(
+                    "assertJ",
+                    DefaultAssertJGeneratorOptions,
                     objects,
+                    project,
                     sourceSet,
-            )
-                sourceSetConvention.plugins[AssertJGeneratorSourceSet.NAME] = assertJSourceSet
-                sourceSet.allSource.source(assertJSourceSet.assertJ)
+                )
 
-                addAndConfigureAssertJGenerate(project, javaPluginExtension, sourceSet, assertJSourceSet, assertJSourceSet)
+                addAndConfigureAssertJGenerate(project, javaPluginExtension, sourceSet)
             }
         }
     }
@@ -89,9 +81,7 @@ class AssertJGeneratorGradlePlugin implements Plugin<Project> {
     // Configures the "generate*" tasks to generate files
     private void addAndConfigureAssertJGenerate(final Project project,
                                                 final JavaPluginExtension javaPlugin,
-                                                final SourceSet sourceSet,
-                                                final AssertJGeneratorOptions assertJOptions,
-                                                final AssertJGeneratorSourceSet assertJSS) {
+                                                final SourceSet sourceSet) {
         // Use the name via calling sourceSet#getTaskName(String, String)
         String generateTaskName = sourceSet.getTaskName('generate', 'assertJ')
 
@@ -102,22 +92,10 @@ class AssertJGeneratorGradlePlugin implements Plugin<Project> {
                 generateTaskName,
                 AssertJGenerationTask,
                 objects,
-                assertJOptions,
-                assertJSS,
+                sourceSet,
         )
-        generationTask.configure {
-            description = "Generates AssertJ assertions for the ${sourceSet} sources."
-            // Get the classes used when creating the ClassLoader for Generation
-            generationClasspath.from(sourceSet.runtimeClasspath)
-
-            dependsOn sourceSet.compileJavaTaskName
-        }
 
         project.afterEvaluate {
-            generationTask.configure {
-                outputDir = assertJSS.getOutputDir(sourceSet)
-            }
-
             // We need to figure out task dependencies now
 
             // Only add the source if we are not working with a "test" set
@@ -133,10 +111,8 @@ class AssertJGeneratorGradlePlugin implements Plugin<Project> {
                 }
 
                 // With the test task, we add it to the _test_ source set
-                testSourceSet.allSource.source(assertJSS.assertJ)
-
-                testSourceSet.java.srcDir(generationTask.map { it.outputDir })
-                project.tasks.findByName(testSourceSet.compileJavaTaskName).dependsOn generationTask
+                testSourceSet.java.srcDir(generationTask.flatMap { it.outputDir })
+                project.tasks.named(testSourceSet.compileJavaTaskName) { dependsOn generationTask }
 
                 Test testTask = project.tasks.findByName(testTaskName) as Test
                 if (testTask && testTaskName != "test") {
