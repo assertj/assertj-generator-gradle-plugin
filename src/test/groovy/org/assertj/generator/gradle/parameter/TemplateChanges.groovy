@@ -197,7 +197,7 @@ class TemplateChanges {
 
         Path generatedAssert = resolvedPackagePath.resolve("HelloWorldAssert.java")
 
-        assertThat(generatedAssert.text).contains('/* %%% foo %%% */')
+        assertThat(generatedAssert).content().contains('/* %%% foo %%% */')
 
         // Now we update the content of the template assertion to make sure that the task is re-run
 
@@ -222,7 +222,7 @@ class TemplateChanges {
         assert result2.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
         assert result2.task(':test').outcome == TaskOutcome.UP_TO_DATE // no test files!
 
-        assertThat(generatedAssert.text).contains(NEW_TEMPLATE_CONTENT)
+        assertThat(generatedAssert).content().contains(NEW_TEMPLATE_CONTENT)
     }
 
     @Test

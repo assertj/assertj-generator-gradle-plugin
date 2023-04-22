@@ -20,7 +20,7 @@ import org.assertj.assertions.generator.description.ClassDescription
 import org.assertj.assertions.generator.description.converter.ClassToClassDescriptionConverter
 import org.assertj.assertions.generator.util.ClassUtil
 import org.assertj.generator.gradle.internal.tasks.AssertionsGeneratorReport
-import org.assertj.generator.gradle.tasks.config.AssertJGeneratorOptions
+import org.assertj.generator.gradle.tasks.config.AssertJGeneratorExtension
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileTree
@@ -57,13 +57,13 @@ class AssertJGenerationTask extends SourceTask {
     @OutputDirectory
     final DirectoryProperty outputDir
 
-    private final AssertJGeneratorOptions assertJOptions
+    private final AssertJGeneratorExtension assertJOptions
 
     @Inject
     AssertJGenerationTask(ObjectFactory objects, SourceSet sourceSet) {
         description = "Generates AssertJ assertions for the  ${sourceSet.name} sources."
 
-        assertJOptions = sourceSet.extensions.getByType(AssertJGeneratorOptions)
+        assertJOptions = sourceSet.extensions.getByType(AssertJGeneratorExtension)
         source(sourceSet.allJava)
         dependsOn sourceSet.compileJavaTaskName
 

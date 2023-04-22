@@ -12,8 +12,8 @@
  */
 package org.assertj.generator.gradle
 
-import org.assertj.generator.gradle.internal.tasks.config.DefaultAssertJGeneratorOptions
 import org.assertj.generator.gradle.tasks.AssertJGenerationTask
+import org.assertj.generator.gradle.tasks.config.AssertJGeneratorExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -22,7 +22,6 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.testing.Test
 
 import javax.inject.Inject
 
@@ -66,11 +65,11 @@ class AssertJGeneratorGradlePlugin implements Plugin<Project> {
                 logger.info("sourceSet: ${sourceSet} creating tasks")
 
                 sourceSet.extensions.create(
-                    "assertJ",
-                    DefaultAssertJGeneratorOptions,
-                    objects,
-                    project,
-                    sourceSet,
+                        "assertJ",
+                        AssertJGeneratorExtension,
+                        objects,
+                        project,
+                        sourceSet,
                 )
 
                 addAndConfigureAssertJGenerate(project, javaPluginExtension, sourceSet)
@@ -82,48 +81,15 @@ class AssertJGeneratorGradlePlugin implements Plugin<Project> {
     private void addAndConfigureAssertJGenerate(final Project project,
                                                 final JavaPluginExtension javaPlugin,
                                                 final SourceSet sourceSet) {
-        // Use the name via calling sourceSet#getTaskName(String, String)
         String generateTaskName = sourceSet.getTaskName('generate', 'assertJ')
 
         logger.info("generationTask: ${generateTaskName}, sourceSet: ${sourceSet}")
 
         // Create a new task for the source set
-        def generationTask = project.tasks.register(
-                generateTaskName,
-                AssertJGenerationTask,
-                objects,
-                sourceSet,
-        )
+        def generationTask = project.tasks.register(generateTaskName, AssertJGenerationTask, objects, sourceSet)
 
-        project.afterEvaluate {
-            // We need to figure out task dependencies now
-
-            // Only add the source if we are not working with a "test" set
-            if (!sourceSet.name.toLowerCase().contains('test')) {
-                // Get the test source set or create a new one if it doesn't already exist
-                final def testTaskName = sourceSet.getTaskName('test', '')
-
-                def testSourceSet = javaPlugin.getSourceSets().findByName(testTaskName)
-                if (!testSourceSet) {
-                    testSourceSet = javaPlugin.sourceSets.create(testTaskName) {
-                        compileClasspath += sourceSet.runtimeClasspath
-                    }
-                }
-
-                // With the test task, we add it to the _test_ source set
-                testSourceSet.java.srcDir(generationTask.flatMap { it.outputDir })
-                project.tasks.named(testSourceSet.compileJavaTaskName) { dependsOn generationTask }
-
-                Test testTask = project.tasks.findByName(testTaskName) as Test
-                if (testTask && testTaskName != "test") {
-                    testTask.classpath += testSourceSet.runtimeClasspath
-
-                    // make sure generator is run before compilation for the test
-                    testTask.dependsOn testSourceSet.compileJavaTaskName
-
-                    project.tasks.test.dependsOn testTask
-                }
-            }
-        } // end after evaluate
+        javaPlugin.sourceSets.named("test").configure {
+            it.java.srcDir(generationTask.flatMap { it.outputDir })
+        }
     }
 }

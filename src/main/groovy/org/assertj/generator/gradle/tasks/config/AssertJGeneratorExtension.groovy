@@ -10,34 +10,38 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.assertj.generator.gradle.tasks.config;
+package org.assertj.generator.gradle.tasks.config
 
-import groovy.lang.Closure;
-import java.util.Collection;
-import org.assertj.assertions.generator.AssertionGenerator;
-import org.assertj.assertions.generator.AssertionsEntryPointType;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.util.ConfigureUtil;
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
+import org.assertj.assertions.generator.AssertionsEntryPointType
+import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.tasks.SourceSet
+import org.gradle.util.ConfigureUtil
+
+import javax.inject.Inject
 
 /**
  * Defines useful parameters and options for configuration of the
- * {@link AssertionGenerator}.
+ * {@link org.assertj.assertions.generator.AssertionGenerator}.
  */
-public interface AssertJGeneratorOptions {
-
+@EqualsAndHashCode
+@ToString
+class AssertJGeneratorExtension {
     /**
      * Generate generating Soft Assertions entry point class.
      * @return templates value, never {@code null}
      */
-    Templates getTemplates();
-
+    final Templates templates
     /**
      * Method used for improving configuration DSL
      *
      * @param closure applied via {@link org.gradle.util.ConfigureUtil#configure(Closure, Object)}
      * @return {@code this}
      */
-    default AssertJGeneratorOptions templates(Closure closure) {
+    AssertJGeneratorExtension templates(Closure closure) {
         ConfigureUtil.configure(closure, getTemplates());
         return this;
     }
@@ -52,24 +56,27 @@ public interface AssertJGeneratorOptions {
      *
      * @return entry points configuration
      */
-    EntryPointGeneratorOptions getEntryPoints();
+    final EntryPointGeneratorOptions entryPoints
 
     /**
      * Helper method for simplifying usage in build scripts
      * @param values Values to set
      */
-    void setEntryPoints(AssertionsEntryPointType... values);
+    void setEntryPoints(AssertionsEntryPointType... rest) {
+        this.entryPoints.only(rest)
+    }
 
     /**
      * Exposed for build scripts
      * @param values String values passed from a build script
      */
-    default void setEntryPoints(Collection<String> values) {
-        getEntryPoints().only(values.stream()
-                .map(String::toUpperCase)
-                .map(AssertionsEntryPointType::valueOf)
-                .toList()
-                .toArray(new AssertionsEntryPointType[0]));
+    def setEntryPoints(Collection<String> values) {
+        getEntryPoints().only(
+                values.stream()
+                        .map(String::toUpperCase)
+                        .map(AssertionsEntryPointType::valueOf)
+                        .toList() as AssertionsEntryPointType[]
+        )
     }
 
     /**
@@ -78,39 +85,39 @@ public interface AssertJGeneratorOptions {
      * @param closure Applied via {@link org.gradle.util.ConfigureUtil#configure(Closure, Object)}
      * @return this
      */
-    AssertJGeneratorOptions entryPoints(Closure closure);
+    AssertJGeneratorExtension entryPoints(Closure closure) {
+        ConfigureUtil.configure(closure, entryPoints)
+        this
+    }
 
     /**
      * The root directory where all generated files will be placed (within sub-folders for packages).
      * @return File the output directory for {@code sourceSet}
      */
-    DirectoryProperty getOutputDir();
+    final DirectoryProperty outputDir
 
     /**
      * Flag specifying whether to generate hierarchical assertions. The default is false.
      * @return true if generating hierarchical
      */
-    Boolean isHierarchical();
-
-    /**
-     * Set the hierarchical value, {@code null} is not allowed here as by setting the value, it has a value.
-     * @param hierarchical true if hierarchical
-     *
-     * @see #isHierarchical()
-     */
-    void setHierarchical(boolean hierarchical);
+    boolean hierarchical = false
 
     /**
      * Skip generating classes, handy way to disable temporarily.
-     * @return true if skipping this set (default: {@code true}, set to {@code false} before configuration)
+     * @return true if skipping this set
      */
-    boolean isSkip();
+    boolean skip = false
 
-    /**
-     * Set the config param {@code skip} true
-     * @param skip true if skipping
-     *
-     * @see #isSkip()
-     */
-    void setSkip(boolean skip);
+    private final Project project
+
+    @Inject
+    AssertJGeneratorExtension(ObjectFactory objects, Project project, SourceSet sourceSet) {
+        this.project = project
+
+        this.outputDir = objects.directoryProperty()
+                .convention(project.layout.buildDirectory.dir("generated-src/${sourceSet.name}-test/java"))
+
+        templates = objects.newInstance(Templates)
+        entryPoints = objects.newInstance(EntryPointGeneratorOptions)
+    }
 }
