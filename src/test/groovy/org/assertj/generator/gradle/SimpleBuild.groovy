@@ -95,20 +95,19 @@ class SimpleBuild {
             """
     }
 
-
     @Test
     void for_single_class() {
-
         buildFile << """
             // Add required plugins and source sets to the sub projects
-            plugins { id "org.assertj.generator" } // Note must use this syntax
+            plugins {
+              id "org.assertj.generator" // Note must use this syntax
+              id "java" 
+            } 
 
             // Override defaults
             sourceSets {
                 main {
-                    assertJ {
-                          
-                    }
+                    assertJ { }
                 }
             }
             
@@ -119,8 +118,6 @@ class SimpleBuild {
                         
             dependencies { 
                 implementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
-                
-                implementation group: 'com.google.guava', name: 'guava', version: '28.1-jre'
                 
                 testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
                 testImplementation group: 'junit', name: 'junit', version: '4.13.1'

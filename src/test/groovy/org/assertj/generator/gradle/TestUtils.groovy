@@ -28,7 +28,10 @@ class TestUtils {
     static def buildFile(File file, @Language("Groovy") String content) {
         file << """
             // Add required plugins and source sets to the sub projects
-            plugins { id "org.assertj.generator" } // Note must use this syntax
+            plugins { 
+                id "org.assertj.generator" // Note must use this syntax
+                id "java"
+            } 
             
             ${content}
             
