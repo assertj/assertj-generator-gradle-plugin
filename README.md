@@ -144,7 +144,7 @@ sourceSets {
     // turn on assertJ generation
     assertJ { 
       // default: generated-srcs/${SOURCE_SET_NAME_TAG}/java
-      outputDir = file("src-gen/${SOURCE_SET_NAME_TAG}/java")
+      outputDir = file("src-gen/main-test/java")
     } 
   }
 }
