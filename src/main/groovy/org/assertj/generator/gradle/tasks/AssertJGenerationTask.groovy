@@ -21,10 +21,8 @@ import org.assertj.assertions.generator.description.converter.ClassToClassDescri
 import org.assertj.assertions.generator.util.ClassUtil
 import org.assertj.generator.gradle.internal.tasks.AssertionsGeneratorReport
 import org.assertj.generator.gradle.tasks.config.AssertJGeneratorExtension
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileTree
-import org.gradle.api.file.FileVisitDetails
+import org.assertj.generator.gradle.tasks.config.SerializedTemplate
+import org.gradle.api.file.*
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
@@ -49,10 +47,10 @@ class AssertJGenerationTask extends SourceTask {
 
     @InputFiles
     @Classpath
-    final ListProperty<File> templateFiles
+    final FileCollection templateFiles
 
     @Input
-    final ListProperty<String> templateStrings
+    final ListProperty<SerializedTemplate> templates
 
     @OutputDirectory
     final DirectoryProperty outputDir
@@ -72,7 +70,7 @@ class AssertJGenerationTask extends SourceTask {
 
         this.outputDir = assertJOptions.outputDir
         this.templateFiles = assertJOptions.templates.templateFiles
-        this.templateStrings = assertJOptions.templates.templateStrings
+        this.templates = assertJOptions.templates.templates
     }
 
     @TaskAction
@@ -92,7 +90,7 @@ class AssertJGenerationTask extends SourceTask {
             } else if (sourceFiles.contains(change.file)) {
                 // source file changed
                 classesToGenerate += change.file
-            } else if (templateFiles.get().contains(change.file)) {
+            } else if (templateFiles.contains(change.file)) {
                 fullRegenRequired = true
             }
         }
@@ -139,8 +137,10 @@ class AssertJGenerationTask extends SourceTask {
 
         Path absOutputDir = project.rootDir.toPath().resolve(this.outputDir.getAsFile().get().toPath())
         report.setDirectoryPathWhereAssertionFilesAreGenerated(absOutputDir.toFile())
-        assertJOptions.templates.getTemplates(report).each {
-            generator.register(it)
+
+        def templates = assertJOptions.templates.templates.get().collect { it.maybeLoadTemplate() }.findAll()
+        for (template in templates) {
+            generator.register(template)
         }
 
         try {

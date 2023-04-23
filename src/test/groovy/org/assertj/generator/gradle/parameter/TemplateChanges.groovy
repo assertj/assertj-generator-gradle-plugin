@@ -77,7 +77,9 @@ class TemplateChanges {
                 main {
                     assertJ {
                         templates {
-                            methods.wholeNumberPrimitive = '${TEMPLATE_CONTENT}'
+                            methods {
+                                wholeNumberPrimitive.template('${TEMPLATE_CONTENT}')
+                            }
                         }              
                     }
                 }
@@ -108,7 +110,9 @@ class TemplateChanges {
                 main {
                     assertJ { 
                         templates {
-                           methods.wholeNumberPrimitive = '${TEMPLATE_CONTENT}'
+                            methods {
+                                wholeNumberPrimitive.template('${TEMPLATE_CONTENT}')
+                            }
                         }
                     }
                 }
@@ -139,7 +143,9 @@ class TemplateChanges {
                 main {
                     assertJ {
                         templates {
-                            methods.wholeNumberPrimitive = '${TEMPLATE_CONTENT}'
+                            methods {
+                                wholeNumberPrimitive.template('${TEMPLATE_CONTENT}')
+                            }
                         } 
                      }
                 }
@@ -177,7 +183,7 @@ class TemplateChanges {
                 main {
                     assertJ { 
                         templates {
-                            methods { wholeNumberPrimitive = '${TEMPLATE_CONTENT}' }
+                            methods { wholeNumberPrimitive.template('${TEMPLATE_CONTENT}') }
                         } 
                     }
                 }
@@ -209,7 +215,7 @@ class TemplateChanges {
                     assertJ { 
                         templates {
                             methods {
-                                wholeNumberPrimitive = '${NEW_TEMPLATE_CONTENT}'
+                                wholeNumberPrimitive.template('${NEW_TEMPLATE_CONTENT}')
                             }
                         }
                     }
@@ -232,7 +238,7 @@ class TemplateChanges {
                 main {
                     assertJ { 
                         templates {
-                            methods { wholeNumberPrimitive = '${TEMPLATE_CONTENT}' }
+                            methods { wholeNumberPrimitive.template('${TEMPLATE_CONTENT}') }
                         }  
                     }
                 }
@@ -270,7 +276,7 @@ class TemplateChanges {
                 main {
                     assertJ {
                         templates {
-                            methods { wholeNumberPrimitive = file('${contentPath}') }
+                            methods { wholeNumberPrimitive.file('${contentPath}') }
                         }  
                     }
                 }
@@ -299,7 +305,7 @@ class TemplateChanges {
                 main {
                      assertJ {
                         templates {
-                            methods { wholeNumberPrimitive = file("${contentPath}") }
+                            methods { wholeNumberPrimitive.file("${contentPath}") }
                         }              
                     }
                 }
@@ -343,7 +349,7 @@ class TemplateChanges {
                 main {
                     assertJ {
                         templates {
-                            methods { wholeNumberAssertion = '${TEMPLATE_CONTENT}' }
+                            methods { wholeNumberAssertion.template('${TEMPLATE_CONTENT}') }
                         }   
                     }
                 }
