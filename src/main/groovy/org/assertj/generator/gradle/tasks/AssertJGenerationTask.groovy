@@ -14,6 +14,7 @@ package org.assertj.generator.gradle.tasks
 
 import com.google.common.collect.Sets
 import com.google.common.reflect.TypeToken
+import org.assertj.assertions.generator.AssertionsEntryPointType
 import org.assertj.assertions.generator.BaseAssertionGenerator
 import org.assertj.assertions.generator.description.ClassDescription
 import org.assertj.assertions.generator.description.converter.ClassToClassDescriptionConverter
@@ -25,6 +26,8 @@ import org.gradle.api.file.*
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 
@@ -37,35 +40,70 @@ import static com.google.common.collect.Sets.newLinkedHashSet
 /**
  * Executes AssertJ generation against provided sources using the configured templates.
  */
+@CacheableTask
 class AssertJGenerationTask extends SourceTask {
 
     private static final logger = Logging.getLogger(AssertJGenerationTask)
 
-    @Classpath
-    final ConfigurableFileCollection generationClasspath
-
     @InputFiles
     @Classpath
-    final FileCollection templateFiles
-
-    @Input
-    final ListProperty<SerializedTemplate> generatorTemplates
+    final ConfigurableFileCollection generationClasspath
 
     @OutputDirectory
     final DirectoryProperty outputDir
 
-    private final AssertJGeneratorExtension assertJOptions
+    // TODO `internal` when Konverted
+    @Input
+    final Property<Boolean> skip
+
+    // TODO `internal` when Konverted
+    @Input
+    final Property<Boolean> hierarchical
+
+    // TODO `internal` when Konverted
+    @Input
+    final SetProperty<AssertionsEntryPointType> entryPoints
+
+    // TODO `internal` when Konverted
+    @Input
+    @Optional
+    final Property<String> entryPointsClassPackage
+
+    // TODO `internal` when Konverted
+    @InputFiles
+    @Classpath
+    final FileCollection templateFiles
+
+    // TODO `internal` when Konverted
+    @Input
+    final ListProperty<SerializedTemplate> generatorTemplates
 
     @Inject
     AssertJGenerationTask(ObjectFactory objects, SourceSet sourceSet) {
         description = "Generates AssertJ assertions for the  ${sourceSet.name} sources."
 
-        assertJOptions = sourceSet.extensions.getByType(AssertJGeneratorExtension)
+        def assertJOptions = sourceSet.extensions.getByType(AssertJGeneratorExtension)
         source(sourceSet.allJava)
         dependsOn sourceSet.compileJavaTaskName
 
         this.generationClasspath = objects.fileCollection()
                 .from(sourceSet.runtimeClasspath)
+
+        this.skip = objects.property(Boolean).tap {
+            set(project.provider { assertJOptions.skip })
+        }
+
+        this.hierarchical = objects.property(Boolean).tap {
+            set(project.provider { assertJOptions.hierarchical })
+        }
+
+        this.entryPoints = objects.setProperty(AssertionsEntryPointType).tap {
+            set(project.provider { assertJOptions.entryPoints.entryPoints })
+        }
+
+        this.entryPointsClassPackage = objects.property(String).tap {
+            set(project.provider { assertJOptions.entryPoints.classPackage })
+        }
 
         this.outputDir = assertJOptions.outputDir
         // TODO Make `templates.templateFiles` `internal` once `AssertJGenerationTask` is Kotlin
@@ -76,7 +114,7 @@ class AssertJGenerationTask extends SourceTask {
 
     @TaskAction
     def execute(IncrementalTaskInputs inputs) {
-        if (assertJOptions.skip) {
+        if (skip.get()) {
             return
         }
 
@@ -125,25 +163,33 @@ class AssertJGenerationTask extends SourceTask {
                         [(classesByTypeName[it]): file]
                     }
                 }
-                .collectEntries()
+                .collectEntries() as Map<TypeToken<?>, File>
 
         inputClassesToFile.values().removeAll {
             !classesToGenerate.contains(it)
         }
 
+        runGeneration(classes, inputClassNames, inputClassesToFile)
+    }
+
+    private def runGeneration(
+            Set<TypeToken<?>> allClasses,
+            Map<File, Set<String>> inputClassNames,
+            Map<TypeToken<?>, File> inputClassesToFile
+    ) {
         BaseAssertionGenerator generator = new BaseAssertionGenerator()
         ClassToClassDescriptionConverter converter = new ClassToClassDescriptionConverter()
 
         def absOutputDir = project.rootDir.toPath().resolve(this.outputDir.getAsFile().get().toPath()).toFile()
 
-        Set<TypeToken<?>> filteredClasses = removeAssertClasses(classes)
+        Set<TypeToken<?>> filteredClasses = removeAssertClasses(allClasses)
         def report = new AssertionsGeneratorReport(
                 absOutputDir,
                 inputClassNames.values().flatten().collect { it.toString() },
-                classes - filteredClasses,
+                allClasses - filteredClasses,
         )
 
-        def templates = assertJOptions.templates.generatorTemplates.get().collect { it.maybeLoadTemplate() }.findAll()
+        def templates = generatorTemplates.get().collect { it.maybeLoadTemplate() }.findAll()
         for (template in templates) {
             generator.register(template)
         }
@@ -151,37 +197,20 @@ class AssertJGenerationTask extends SourceTask {
         try {
             generator.directoryWhereAssertionFilesAreGenerated = absOutputDir
 
-            Set<ClassDescription> classDescriptions = new LinkedHashSet<>()
-
-            if (assertJOptions.hierarchical) {
-                for (clazz in filteredClasses) {
-                    ClassDescription classDescription = converter.convertToClassDescription(clazz)
-                    File[] generatedCustomAssertionFiles = generator.generateHierarchicalCustomAssertionFor(
-                            classDescription,
-                            filteredClasses,
-                    )
-                    report.addGeneratedAssertionFiles(generatedCustomAssertionFiles)
-                    classDescriptions.add(classDescription)
-                }
+            def classDescriptions
+            if (hierarchical.get()) {
+                classDescriptions = generateHierarchical(converter, generator, report, filteredClasses)
             } else {
-                for (clazz in filteredClasses) {
-                    def classDescription = converter.convertToClassDescription(clazz)
-                    classDescriptions.add(classDescription)
-
-                    if (inputClassesToFile.containsKey(clazz)) {
-                        File generatedCustomAssertionFile = generator.generateCustomAssertionFor(classDescription)
-                        report.addGeneratedAssertionFiles(generatedCustomAssertionFile)
-                    }
-                }
+                classDescriptions = generateFlat(converter, generator, report, filteredClasses, inputClassesToFile)
             }
 
             if (!inputClassesToFile.isEmpty()) {
                 // only generate the entry points if there are classes that have changed (or exist..)
-                for (assertionsEntryPointType in assertJOptions.entryPoints.entryPoints) {
+                for (assertionsEntryPointType in entryPoints.get()) {
                     File assertionsEntryPointFile = generator.generateAssertionsEntryPointClassFor(
-                            classDescriptions,
+                            classDescriptions.toSet(),
                             assertionsEntryPointType,
-                            assertJOptions.entryPoints.classPackage,
+                            entryPointsClassPackage.getOrNull(),
                     )
                     report.reportEntryPointGeneration(assertionsEntryPointType, assertionsEntryPointFile)
                 }
@@ -191,6 +220,42 @@ class AssertJGenerationTask extends SourceTask {
         }
 
         logger.info(report.getReportContent())
+    }
+
+    private static Collection<ClassDescription> generateHierarchical(
+            ClassToClassDescriptionConverter converter,
+            BaseAssertionGenerator generator,
+            AssertionsGeneratorReport report,
+            Set<TypeToken<?>> classes
+    ) {
+        classes.collect { clazz ->
+            def classDescription = converter.convertToClassDescription(clazz)
+            def generatedCustomAssertionFiles = generator.generateHierarchicalCustomAssertionFor(
+                    classDescription,
+                    classes,
+            )
+            report.addGeneratedAssertionFiles(generatedCustomAssertionFiles)
+            classDescription
+        }
+    }
+
+    private static Collection<ClassDescription> generateFlat(
+            ClassToClassDescriptionConverter converter,
+            BaseAssertionGenerator generator,
+            AssertionsGeneratorReport report,
+            Set<TypeToken<?>> classes,
+            Map<TypeToken<?>, File> inputClassesToFile
+    ) {
+        classes.collect { clazz ->
+            def classDescription = converter.convertToClassDescription(clazz)
+
+            if (inputClassesToFile.containsKey(clazz)) {
+                def generatedCustomAssertionFile = generator.generateCustomAssertionFor(classDescription)
+                report.addGeneratedAssertionFiles(generatedCustomAssertionFile)
+            }
+
+            classDescription
+        }
     }
 
     /**
