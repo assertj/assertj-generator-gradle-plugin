@@ -3,6 +3,8 @@ import com.gradle.publish.PublishTask.GRADLE_PUBLISH_SECRET
 
 plugins {
   id("groovy")
+  id("org.jetbrains.kotlin.jvm") version "1.8.20"
+  id("io.gitlab.arturbosch.detekt") version "1.22.0"
   id("com.gradle.plugin-publish") version "1.2.0"
   id("java-gradle-plugin")
 }
@@ -68,3 +70,24 @@ dependencies {
   testImplementation("junit:junit:4.13.2")
 }
 
+tasks.compileGroovy {
+  classpath += files(tasks.compileKotlin.flatMap { it.destinationDirectory })
+}
+
+tasks.classes {
+  dependsOn(tasks.compileGroovy)
+}
+
+detekt {
+  parallel = true
+  autoCorrect = true
+
+  buildUponDefaultConfig = true // preconfigure defaults
+  config = files("$rootDir/config/detekt-config.yml")
+
+  allRules = false // activate all available (even unstable) rules.
+}
+
+dependencies {
+  detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.22.0")
+}

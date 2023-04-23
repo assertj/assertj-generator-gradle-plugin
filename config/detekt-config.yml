@@ -1,0 +1,20 @@
+formatting:
+  active: true
+  Indentation:
+    active: true
+    indentSize: 2
+  PackageName:
+    active: false
+
+style:
+  active: true
+  ReturnCount:
+    max: 4
+
+complexity:
+  LongMethod:
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**' ]
+
+naming:
+  PackageNaming:
+    packagePattern: '[a-z]+(\.[a-z][A-Za-z0-9_]*)*'
