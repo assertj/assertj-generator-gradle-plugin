@@ -1,5 +1,5 @@
 /*
- * Copyright 2017. assertj-generator-gradle-plugin contributors.
+ * Copyright 2023. assertj-generator-gradle-plugin contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -27,7 +27,6 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.FileVisitDetails
-import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -56,14 +55,14 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.useLines
 
-private val logger = Logging.getLogger(AssertJGenerationTask::class.java)
-
 /**
  * Executes AssertJ generation against provided sources using the configured templates.
  */
 @CacheableTask
-open class AssertJGenerationTask @Inject internal constructor(objects: ObjectFactory, sourceSet: SourceSet) :
-  SourceTask() {
+open class AssertJGenerationTask @Inject internal constructor(
+  objects: ObjectFactory,
+  sourceSet: SourceSet,
+) : SourceTask() {
 
   @get:InputFiles
   @get:Classpath
