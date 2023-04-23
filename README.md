@@ -175,7 +175,7 @@ sourceSets {
     assertJ {
       templates {
         methods {
-          wholeNumberPrimitive = 'public get${Property}() { }'
+          wholeNumberPrimitive.template('public get${Property}() { }')
         }
       }
     }
@@ -192,7 +192,7 @@ sourceSets {
       templates {
         // Set the template to file content: ./wholeNumberOverride.txt
         methods {
-          wholeNumberPrimitive = file('wholeNumberOverride.txt')
+          wholeNumberPrimitive.file('wholeNumberOverride.txt')
         }
       } 
     }
@@ -200,24 +200,19 @@ sourceSets {
 }
 ```
 
-The `templateDir` is not a scope-override property. If set, it only applies to the block it is defined within. This was
-intentionally done to remove ambiguity. Additionally, this example can be applied to local scopes.
+We can root all files under a directory by using a file from the scoped `project`:
 
 ```gradle
-assertJ {
-    
-}
-
 sourceSets {
   main {
     assertJ {
       templates {
         // Set all templates in this block to be relative to the folder specified
-        dir = "${projectDir}/gradle/other-templates"
+        def rootDirectory = projectDir.dir("gradle/other-templates")
   
         // Change the file content to:
         //      ${projectDir}/gradle/other-templates/wholeNumberOverride.txt
-        wholeNumberAssertion = file('wholeNumberOverride.txt')
+        wholeNumberAssertion.file(rootDirectory.file('wholeNumberOverride.txt'))
       }         
     }
   }
@@ -244,11 +239,6 @@ By default, only the `standard` style is turned on. To adjust this, simply set t
 `entryPoints` closure.
 
 ```gradle
-// For all source sets:
-assertJ {
-    
-}
-
 sourceSets {
   main {
     assertJ {
