@@ -111,5 +111,4 @@ open class EntryPointGeneratorOptions {
     set(value) {
       forEnum(value, AssertionsEntryPointType.AUTO_CLOSEABLE_BDD_SOFT)
     }
-
 }
