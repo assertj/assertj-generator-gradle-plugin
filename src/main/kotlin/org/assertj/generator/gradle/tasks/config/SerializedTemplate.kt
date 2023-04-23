@@ -20,7 +20,7 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
 
-class SerializedTemplate(
+internal class SerializedTemplate(
   type: Type,
   content: String?,
   file: File?,

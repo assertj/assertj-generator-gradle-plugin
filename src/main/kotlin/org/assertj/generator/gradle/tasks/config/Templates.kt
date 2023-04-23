@@ -30,9 +30,6 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
 import org.gradle.kotlin.dsl.listProperty
 import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
@@ -81,17 +78,12 @@ open class Templates @Inject internal constructor(objects: ObjectFactory) {
   /**
    * All files associated with templates. This is used for building up dependencies.
    */
-  // TODO Make this `internal` once `AssertJGenerationTask` is Kotlin
-  @get:InputFiles
-  @get:Classpath
-  val templateFiles: FileCollection
+  internal val templateFiles: FileCollection
 
   /**
    * All template data that has been set by a user.
    */
-  // TODO Make this `internal` once `AssertJGenerationTask` is Kotlin
-  @get:Input
-  val generatorTemplates: ListProperty<SerializedTemplate>
+  internal val generatorTemplates: ListProperty<SerializedTemplate>
 
   init {
     classes = objects.newInstance<ClassTemplates>()
