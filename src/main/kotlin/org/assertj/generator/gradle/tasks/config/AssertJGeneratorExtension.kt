@@ -60,7 +60,7 @@ open class AssertJGeneratorExtension @Inject internal constructor(
 
   /**
    * Helper method for simplifying usage in build scripts
-   * @param values Values to set
+   * @param rest Values to set
    */
   fun setEntryPoints(vararg rest: AssertionsEntryPointType) {
     this.entryPoints.only(rest = rest)
@@ -76,8 +76,6 @@ open class AssertJGeneratorExtension @Inject internal constructor(
 
   /**
    * Used to change "entry point" class generation.
-   *
-   * @param closure Applied via {@link org.gradle.util.ConfigureUtil#configure(Closure, Object)}
    * @return this
    */
   fun entryPoints(action: Action<in EntryPointGeneratorOptions>): AssertJGeneratorExtension {
