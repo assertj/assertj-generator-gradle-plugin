@@ -49,7 +49,7 @@ class AssertJGenerationTask extends SourceTask {
     final FileCollection templateFiles
 
     @Input
-    final ListProperty<SerializedTemplate> templates
+    final ListProperty<SerializedTemplate> generatorTemplates
 
     @OutputDirectory
     final DirectoryProperty outputDir
@@ -68,8 +68,10 @@ class AssertJGenerationTask extends SourceTask {
                 .from(sourceSet.runtimeClasspath)
 
         this.outputDir = assertJOptions.outputDir
+        // TODO Make `templates.templateFiles` `internal` once `AssertJGenerationTask` is Kotlin
         this.templateFiles = assertJOptions.templates.templateFiles
-        this.templates = assertJOptions.templates.templates
+        // TODO Make `templates.generatorTemplates` `internal` once `AssertJGenerationTask` is Kotlin
+        this.generatorTemplates = assertJOptions.templates.generatorTemplates
     }
 
     @TaskAction
@@ -141,7 +143,7 @@ class AssertJGenerationTask extends SourceTask {
                 classes - filteredClasses,
         )
 
-        def templates = assertJOptions.templates.templates.get().collect { it.maybeLoadTemplate() }.findAll()
+        def templates = assertJOptions.templates.generatorTemplates.get().collect { it.maybeLoadTemplate() }.findAll()
         for (template in templates) {
             generator.register(template)
         }
