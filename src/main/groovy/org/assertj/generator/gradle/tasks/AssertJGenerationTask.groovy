@@ -173,9 +173,9 @@ class AssertJGenerationTask extends SourceTask {
                 }
             }
 
-            if (!inputClassesToFile.empty) {
+            if (!inputClassesToFile.isEmpty()) {
                 // only generate the entry points if there are classes that have changed (or exist..)
-                for (assertionsEntryPointType in assertJOptions.entryPoints) {
+                for (assertionsEntryPointType in assertJOptions.entryPoints.entryPoints) {
                     File assertionsEntryPointFile = generator.generateAssertionsEntryPointClassFor(
                             classDescriptions,
                             assertionsEntryPointType,

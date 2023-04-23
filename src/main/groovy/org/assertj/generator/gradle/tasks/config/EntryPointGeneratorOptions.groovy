@@ -1,5 +1,5 @@
 /*
- * Copyright 2017. assertj-generator-gradle-plugin contributors.
+ * Copyright 2023. assertj-generator-gradle-plugin contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,7 +12,7 @@
  */
 package org.assertj.generator.gradle.tasks.config
 
-import com.google.common.collect.Iterators
+
 import groovy.transform.EqualsAndHashCode
 import org.assertj.assertions.generator.AssertionsEntryPointType
 
@@ -23,11 +23,13 @@ import java.util.stream.Collectors
  * way when configuring.
  */
 @EqualsAndHashCode
-class EntryPointGeneratorOptions implements Iterable<AssertionsEntryPointType>, Serializable {
+class EntryPointGeneratorOptions {
 
-    // Ideally, this should be final, however due to the way ObjectInputStream works we have to make it
-    // non-final and reassign it. The default initialization is never called :(
-    private Set<AssertionsEntryPointType> entryPoints = EnumSet.of(AssertionsEntryPointType.STANDARD)
+    private final Set<AssertionsEntryPointType> _entryPoints = EnumSet.of(AssertionsEntryPointType.STANDARD)
+
+    Set<AssertionsEntryPointType> getEntryPoints() {
+        _entryPoints.asImmutable()
+    }
 
     /**
      * An optional package name for the Assertions entry point class. If omitted, the package will be determined
@@ -36,36 +38,31 @@ class EntryPointGeneratorOptions implements Iterable<AssertionsEntryPointType>, 
      */
     String classPackage
 
-    @Override
-    Iterator<AssertionsEntryPointType> iterator() {
-        Iterators.unmodifiableIterator(entryPoints.iterator())
-    }
-
     private void forEnum(boolean value, AssertionsEntryPointType e) {
         if (value) {
-            entryPoints.add(e)
+            _entryPoints.add(e)
         } else {
-            entryPoints.remove(e)
+            _entryPoints.remove(e)
         }
     }
 
     void only(AssertionsEntryPointType... rest) {
-        entryPoints.clear()
+        _entryPoints.clear()
 
-        entryPoints.addAll(rest.toList())
+        _entryPoints.addAll(rest.toList())
     }
 
     void only(String... rest) {
-        Set<AssertionsEntryPointType> asEnums = Arrays.stream(rest)
+        def asEnums = Arrays.stream(rest)
                 .map { it.toUpperCase() }
                 .map { AssertionsEntryPointType.valueOf(it) }
                 .collect(Collectors.toSet())
 
-        only(asEnums.toArray(new AssertionsEntryPointType[0]))
+        only(asEnums as AssertionsEntryPointType[])
     }
 
     /**
-     * Generate Assertions entry point class.
+     * @see AssertionsEntryPointType#STANDARD
      */
     boolean getStandard() {
         entryPoints.contains(AssertionsEntryPointType.STANDARD)
@@ -76,7 +73,7 @@ class EntryPointGeneratorOptions implements Iterable<AssertionsEntryPointType>, 
     }
 
     /**
-     * Generate generating BDD Assertions entry point class.
+     * @see AssertionsEntryPointType#BDD
      */
     boolean getBdd() {
         entryPoints.contains(AssertionsEntryPointType.BDD)
@@ -87,7 +84,29 @@ class EntryPointGeneratorOptions implements Iterable<AssertionsEntryPointType>, 
     }
 
     /**
-     * Generate generating JUnit Soft Assertions entry point class.
+     * @see AssertionsEntryPointType#SOFT
+     */
+    boolean getSoft() {
+        entryPoints.contains(AssertionsEntryPointType.SOFT)
+    }
+
+    void setSoft(boolean value) {
+        forEnum(value, AssertionsEntryPointType.SOFT)
+    }
+
+    /**
+     * @see AssertionsEntryPointType#BDD_SOFT
+     */
+    boolean getBddSoft() {
+        entryPoints.contains(AssertionsEntryPointType.BDD_SOFT)
+    }
+
+    void setBddSoft(boolean value) {
+        forEnum(value, AssertionsEntryPointType.BDD_SOFT)
+    }
+
+    /**
+     * @see AssertionsEntryPointType#JUNIT_SOFT
      */
     boolean getJunitSoft() {
         entryPoints.contains(AssertionsEntryPointType.JUNIT_SOFT)
@@ -98,25 +117,35 @@ class EntryPointGeneratorOptions implements Iterable<AssertionsEntryPointType>, 
     }
 
     /**
-     * Generate generating Soft Assertions entry point class.
+     * @see AssertionsEntryPointType#JUNIT_BDD_SOFT
      */
-    boolean getSoft() {
-        entryPoints.contains(AssertionsEntryPointType.SOFT)
+    boolean getJunitBddSoft() {
+        entryPoints.contains(AssertionsEntryPointType.JUNIT_BDD_SOFT)
     }
 
-    void setSoft(boolean value) {
-        forEnum(value, AssertionsEntryPointType.SOFT)
+    void setJunitBddSoft(boolean value) {
+        forEnum(value, AssertionsEntryPointType.JUNIT_BDD_SOFT)
     }
 
-    private void writeObject(ObjectOutputStream s) throws IOException {
-        s.writeObject(entryPoints)
-        s.writeObject(classPackage)
+    /**
+     * @see AssertionsEntryPointType#AUTO_CLOSEABLE_SOFT
+     */
+    boolean getAutoCloseableSoft() {
+        entryPoints.contains(AssertionsEntryPointType.AUTO_CLOSEABLE_SOFT)
     }
 
-    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
-        Set<AssertionsEntryPointType> typesFromStream = (Set<AssertionsEntryPointType>) s.readObject()
-        this.entryPoints = typesFromStream
+    void setAutoCloseableSoft(boolean value) {
+        forEnum(value, AssertionsEntryPointType.AUTO_CLOSEABLE_SOFT)
+    }
 
-        classPackage = (String) s.readObject()
+    /**
+     * @see AssertionsEntryPointType#AUTO_CLOSEABLE_BDD_SOFT
+     */
+    boolean getAutoCloseableBddSoft() {
+        entryPoints.contains(AssertionsEntryPointType.AUTO_CLOSEABLE_BDD_SOFT)
+    }
+
+    void setAutoCloseableBddSoft(boolean value) {
+        forEnum(value, AssertionsEntryPointType.AUTO_CLOSEABLE_BDD_SOFT)
     }
 }
