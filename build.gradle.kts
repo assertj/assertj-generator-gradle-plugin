@@ -62,6 +62,7 @@ dependencies {
   api("org.assertj:assertj-core:3.24.2")
   api("org.assertj:assertj-assertions-generator:2.2.1")
 
+  implementation(gradleKotlinDsl())
   implementation("com.google.guava:guava:31.1-jre")
 
   testCompileOnly("org.jetbrains:annotations:24.0.1")
