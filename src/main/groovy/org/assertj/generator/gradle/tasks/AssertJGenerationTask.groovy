@@ -14,7 +14,6 @@ package org.assertj.generator.gradle.tasks
 
 import com.google.common.collect.Sets
 import com.google.common.reflect.TypeToken
-import org.assertj.assertions.generator.AssertionsEntryPointType
 import org.assertj.assertions.generator.BaseAssertionGenerator
 import org.assertj.assertions.generator.description.ClassDescription
 import org.assertj.assertions.generator.description.converter.ClassToClassDescriptionConverter
@@ -133,10 +132,14 @@ class AssertJGenerationTask extends SourceTask {
         BaseAssertionGenerator generator = new BaseAssertionGenerator()
         ClassToClassDescriptionConverter converter = new ClassToClassDescriptionConverter()
 
-        AssertionsGeneratorReport report = new AssertionsGeneratorReport()
+        def absOutputDir = project.rootDir.toPath().resolve(this.outputDir.getAsFile().get().toPath()).toFile()
 
-        Path absOutputDir = project.rootDir.toPath().resolve(this.outputDir.getAsFile().get().toPath())
-        report.setDirectoryPathWhereAssertionFilesAreGenerated(absOutputDir.toFile())
+        Set<TypeToken<?>> filteredClasses = removeAssertClasses(classes)
+        def report = new AssertionsGeneratorReport(
+                absOutputDir,
+                inputClassNames.values().flatten().collect { it.toString() },
+                classes - filteredClasses,
+        )
 
         def templates = assertJOptions.templates.templates.get().collect { it.maybeLoadTemplate() }.findAll()
         for (template in templates) {
@@ -144,51 +147,48 @@ class AssertJGenerationTask extends SourceTask {
         }
 
         try {
-            generator.setDirectoryWhereAssertionFilesAreGenerated(absOutputDir.toFile())
-
-            report.setInputClasses(inputClassNames.values().flatten())
-
-            Set<TypeToken<?>> filteredClasses = removeAssertClasses(classes)
-            report.setExcludedClassesFromAssertionGeneration(Sets.difference(classes, filteredClasses))
+            generator.directoryWhereAssertionFilesAreGenerated = absOutputDir
 
             Set<ClassDescription> classDescriptions = new LinkedHashSet<>()
 
             if (assertJOptions.hierarchical) {
-                for (TypeToken<?> clazz : filteredClasses) {
+                for (clazz in filteredClasses) {
                     ClassDescription classDescription = converter.convertToClassDescription(clazz)
-                    File[] generatedCustomAssertionFiles = generator.generateHierarchicalCustomAssertionFor(classDescription,
-                            filteredClasses)
-                    report.addGeneratedAssertionFile(generatedCustomAssertionFiles[0])
-                    report.addGeneratedAssertionFile(generatedCustomAssertionFiles[1])
+                    File[] generatedCustomAssertionFiles = generator.generateHierarchicalCustomAssertionFor(
+                            classDescription,
+                            filteredClasses,
+                    )
+                    report.addGeneratedAssertionFiles(generatedCustomAssertionFiles)
                     classDescriptions.add(classDescription)
                 }
             } else {
-                for (TypeToken<?> clazz : filteredClasses) {
+                for (clazz in filteredClasses) {
                     def classDescription = converter.convertToClassDescription(clazz)
                     classDescriptions.add(classDescription)
 
                     if (inputClassesToFile.containsKey(clazz)) {
                         File generatedCustomAssertionFile = generator.generateCustomAssertionFor(classDescription)
-                        report.addGeneratedAssertionFile(generatedCustomAssertionFile)
+                        report.addGeneratedAssertionFiles(generatedCustomAssertionFile)
                     }
                 }
             }
 
             if (!inputClassesToFile.empty) {
                 // only generate the entry points if there are classes that have changed (or exist..)
-
-                for (AssertionsEntryPointType assertionsEntryPointType : assertJOptions.entryPoints) {
-                    File assertionsEntryPointFile = generator.generateAssertionsEntryPointClassFor(classDescriptions,
+                for (assertionsEntryPointType in assertJOptions.entryPoints) {
+                    File assertionsEntryPointFile = generator.generateAssertionsEntryPointClassFor(
+                            classDescriptions,
                             assertionsEntryPointType,
-                            assertJOptions.entryPoints.classPackage)
+                            assertJOptions.entryPoints.classPackage,
+                    )
                     report.reportEntryPointGeneration(assertionsEntryPointType, assertionsEntryPointFile)
                 }
             }
         } catch (Exception e) {
-            report.setException(e)
+            report.exception = e
         }
 
-        logger.info(report.reportContent)
+        logger.info(report.getReportContent())
     }
 
     /**
