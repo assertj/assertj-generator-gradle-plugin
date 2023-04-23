@@ -17,24 +17,25 @@ import org.assertj.assertions.generator.AssertionsEntryPointType
 
 import static com.google.common.collect.Maps.newTreeMap
 import static com.google.common.collect.Sets.newTreeSet
-import static org.apache.commons.lang3.ArrayUtils.isNotEmpty
 import static org.apache.commons.lang3.StringUtils.remove
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace
 
 class AssertionsGeneratorReport {
+    File directoryPathWhereAssertionFilesAreGenerated
+    Collection<String> inputPackages
+    Collection<String> inputClasses
+    Exception exception
+    Collection<TypeToken<?>> excludedClassesFromAssertionGeneration
+    final List<String> userTemplates
+    final Set<String> inputClassesNotFound
 
     private static final String INDENT = "- "
     private static final String SECTION_START = "--- "
     private static final String SECTION_END = " ---\n"
-    private File directoryPathWhereAssertionFilesAreGenerated
-    private Set<String> generatedCustomAssertionFileNames
-    private Map<AssertionsEntryPointType, File> assertionsEntryPointFilesByType
-    private Collection<String> inputPackages
-    private Collection<String> inputClasses
-    private Exception exception
-    private Collection<TypeToken<?>> excludedClassesFromAssertionGeneration
-    private Set<String> inputClassesNotFound
-    private List<String> userTemplates
+    private static final String Line = System.lineSeparator()
+
+    private final Set<String> generatedCustomAssertionFileNames
+    private final Map<AssertionsEntryPointType, File> assertionsEntryPointFilesByType
 
     AssertionsGeneratorReport() {
         assertionsEntryPointFilesByType = newTreeMap()
@@ -44,127 +45,135 @@ class AssertionsGeneratorReport {
         userTemplates = new ArrayList<>()
     }
 
-    void setDirectoryPathWhereAssertionFilesAreGenerated(File directory) {
-        this.directoryPathWhereAssertionFilesAreGenerated = directory
-    }
-
     void addGeneratedAssertionFile(File generatedCustomAssertionFile) throws IOException {
         generatedCustomAssertionFileNames.add(generatedCustomAssertionFile.getCanonicalPath())
     }
 
     String getReportContent() {
-        StringBuilder reportBuilder = new StringBuilder(System.lineSeparator())
-        reportBuilder.append(System.lineSeparator())
-        reportBuilder.append("====================================\n")
-        reportBuilder.append("AssertJ assertions generation report\n")
-        reportBuilder.append("====================================\n")
-        buildGeneratorParametersReport(reportBuilder)
-        reportBuilder.append(System.lineSeparator())
-        reportBuilder.append(SECTION_START).append("Generator results").append(SECTION_END)
-        if (generationError()) {
-            buildGeneratorReportError(reportBuilder)
-        } else if (nothingGenerated()) {
-            buildGeneratorReportWhenNothingWasGenerated(reportBuilder)
-        } else {
-            buildGeneratorReportSuccess(reportBuilder)
-        }
-        return reportBuilder.toString()
+        new StringBuilder().tap {
+            append(Line)
+            append("====================================\n")
+            append("AssertJ assertions generation report\n")
+            append("====================================\n")
+            buildGeneratorParametersReport(it)
+            append(Line)
+            append(SECTION_START).append("Generator results").append(SECTION_END)
+
+            if (generationError()) {
+                buildGeneratorReportError(it)
+            } else if (nothingGenerated()) {
+                buildGeneratorReportWhenNothingWasGenerated(it)
+            } else {
+                buildGeneratorReportSuccess(it)
+            }
+        }.toString()
     }
 
-    private void buildGeneratorReportSuccess(StringBuilder reportBuilder) {
-        reportBuilder.append(System.lineSeparator())
-        reportBuilder.append("Directory where custom assertions files have been generated:\n")
-        reportBuilder.append(INDENT).append(directoryPathWhereAssertionFilesAreGenerated).append(System.lineSeparator())
-        reportBuilder.append(System.lineSeparator())
-        reportBuilder.append("Custom assertions files generated:\n")
-        for (String fileName : generatedCustomAssertionFileNames) {
-            reportBuilder.append(INDENT).append(fileName).append(System.lineSeparator())
-        }
-        if (!inputClassesNotFound.isEmpty()) {
-            reportBuilder.append(System.lineSeparator())
-            reportBuilder.append("No custom assertions files generated for the following input classes as they were not found:\n")
-            for (String inputClassNotFound : inputClassesNotFound) {
-                reportBuilder.append(INDENT).append(inputClassNotFound).append(System.lineSeparator())
+    private StringBuilder buildGeneratorReportSuccess(final StringBuilder self) {
+        self.tap {
+            append(Line)
+            append("Directory where custom assertions files have been generated:\n")
+            append(INDENT).append(directoryPathWhereAssertionFilesAreGenerated).append(Line)
+            append(Line)
+            append("Custom assertions files generated:\n")
+            for (String fileName : generatedCustomAssertionFileNames) {
+                append(INDENT).append(fileName).append(Line)
             }
-        }
-        reportEntryPointClassesGeneration(reportBuilder)
-    }
-
-    private void reportEntryPointClassesGeneration(StringBuilder reportBuilder) {
-        for (AssertionsEntryPointType type : assertionsEntryPointFilesByType.keySet()) {
-            if (assertionsEntryPointFilesByType.get(type) != null) {
-                String entryPointClassName = remove(type.getFileName(), ".java")
-                reportBuilder.append(System.lineSeparator())
-                        .append(entryPointClassName).append(" entry point class has been generated in file:\n")
-                        .append(INDENT).append(assertionsEntryPointFilesByType.get(type).getAbsolutePath())
-                        .append(System.lineSeparator())
+            if (!inputClassesNotFound.isEmpty()) {
+                append(Line)
+                append("No custom assertions files generated for the following input classes as they were not found:\n")
+                for (inputClassNotFound in inputClassesNotFound) {
+                    append(INDENT).append(inputClassNotFound).append(Line)
+                }
             }
+            reportEntryPointClassesGeneration(it)
         }
     }
 
-    private void buildGeneratorReportWhenNothingWasGenerated(StringBuilder reportBuilder) {
-        reportBuilder.append(System.lineSeparator())
-        reportBuilder.append("No assertions generated as no classes have been found from given classes/packages.\n")
-        if (isNotEmpty(inputClasses as String[])) {
-            reportBuilder.append(INDENT).append("Given classes : ").append(Arrays.toString(inputClasses))
-            reportBuilder.append(System.lineSeparator())
+    private StringBuilder reportEntryPointClassesGeneration(final StringBuilder self) {
+        self.tap {
+            for (type in assertionsEntryPointFilesByType.keySet()) {
+                if (assertionsEntryPointFilesByType.get(type) != null) {
+                    String entryPointClassName = remove(type.getFileName(), ".java")
+                    append(Line)
+                            .append(entryPointClassName).append(" entry point class has been generated in file:\n")
+                            .append(INDENT).append(assertionsEntryPointFilesByType.get(type).getAbsolutePath())
+                            .append(Line)
+                }
+            }
         }
-        if (isNotEmpty(inputPackages as String[])) {
-            reportBuilder.append(INDENT).append("Given packages : ").append(Arrays.toString(inputPackages))
-            reportBuilder.append(System.lineSeparator())
-        }
-        if (isNotEmpty(excludedClassesFromAssertionGeneration)) {
-            reportBuilder.append(INDENT).append("Excluded classes : ").append(excludedClassesFromAssertionGeneration)
+
+    }
+
+    private StringBuilder buildGeneratorReportWhenNothingWasGenerated(final StringBuilder self) {
+        self.tap {
+            append(Line)
+            append("No assertions generated as no classes have been found from given classes/packages.\n")
+            if (!inputClasses?.isEmpty()) {
+                append(INDENT).append("Given classes : ").append(Arrays.toString(inputClasses))
+                append(Line)
+            }
+            if (!inputPackages?.isEmpty()) {
+                append(INDENT).append("Given packages : ").append(Arrays.toString(inputPackages))
+                append(Line)
+            }
+            if (!excludedClassesFromAssertionGeneration.isEmpty()) {
+                append(INDENT).append("Excluded classes : ").append(excludedClassesFromAssertionGeneration)
+            }
         }
     }
 
-    private void buildGeneratorReportError(StringBuilder reportBuilder) {
-        reportBuilder.append(System.lineSeparator())
-        reportBuilder.append("Assertions failed with error : ").append(exception.getMessage())
-        reportBuilder.append(System.lineSeparator())
-        if (isNotEmpty(inputClasses as String[])) {
-            reportBuilder.append(INDENT).append("Given classes were : ").append(Arrays.toString(inputClasses))
-            reportBuilder.append(System.lineSeparator())
+    private StringBuilder buildGeneratorReportError(final StringBuilder self) {
+        self.tap {
+            append(Line)
+            append("Assertions failed with error : ").append(exception.getMessage())
+            append(Line)
+            if (!inputClasses?.isEmpty()) {
+                append(INDENT).append("Given classes were : ").append(Arrays.toString(inputClasses))
+                append(Line)
+            }
+            if (!inputPackages?.isEmpty()) {
+                append(INDENT).append("Given packages were : ").append(Arrays.toString(inputPackages))
+                append(Line)
+            }
+            append(Line)
+            append("Full error stack : ").append(getStackTrace(exception))
         }
-        if (isNotEmpty(inputPackages as String[])) {
-            reportBuilder.append(INDENT).append("Given packages were : ").append(Arrays.toString(inputPackages))
-            reportBuilder.append(System.lineSeparator())
-        }
-        reportBuilder.append(System.lineSeparator())
-        reportBuilder.append("Full error stack : ").append(getStackTrace(exception))
     }
 
-    private void buildGeneratorParametersReport(StringBuilder reportBuilder) {
-        reportBuilder.append(System.lineSeparator())
-        reportBuilder.append(SECTION_START).append("Generator input parameters").append(SECTION_END)
-                .append(System.lineSeparator())
-        if (!(userTemplates as List<String>).isEmpty()) {
-            reportBuilder.append("The following templates will replace the ones provided by AssertJ when generating AssertJ assertions :\n")
-            for (String inputPackage : userTemplates) {
-                reportBuilder.append(INDENT).append(inputPackage).append(System.lineSeparator())
+    private StringBuilder buildGeneratorParametersReport(final StringBuilder reportBuilder) {
+        reportBuilder.tap {
+            append(Line)
+            append(SECTION_START).append("Generator input parameters").append(SECTION_END)
+                    .append(Line)
+            if (!userTemplates.isEmpty()) {
+                append("The following templates will replace the ones provided by AssertJ when generating AssertJ assertions :\n")
+                for (String inputPackage : userTemplates) {
+                    append(INDENT).append(inputPackage).append(Line)
+                }
+                append(Line)
             }
-            reportBuilder.append(System.lineSeparator())
-        }
-        if (isNotEmpty(inputPackages as String[])) {
-            reportBuilder.append("Generating AssertJ assertions for classes in following packages and subpackages:\n")
-            for (String inputPackage : inputPackages) {
-                reportBuilder.append(INDENT).append(inputPackage).append(System.lineSeparator())
+            if (!inputPackages?.isEmpty()) {
+                append("Generating AssertJ assertions for classes in following packages and subpackages:\n")
+                for (inputPackage in inputPackages) {
+                    append(INDENT).append(inputPackage).append(Line)
+                }
             }
-        }
-        if (!isNotEmpty(inputClasses as String[])) {
-            if (isNotEmpty(inputPackages as String[])) {
-                reportBuilder.append(System.lineSeparator())
+            if (!inputClasses?.isEmpty()) {
+                if (!inputPackages?.isEmpty()) {
+                    reportBuilder.append(Line)
+                }
+                append("Generating AssertJ assertions for classes:\n")
+                for (inputClass in inputClasses) {
+                    append(INDENT).append(inputClass).append(Line)
+                }
             }
-            reportBuilder.append("Generating AssertJ assertions for classes:\n")
-            for (String inputClass : inputClasses) {
-                reportBuilder.append(INDENT).append(inputClass).append(System.lineSeparator())
-            }
-        }
-        if (!excludedClassesFromAssertionGeneration?.isEmpty()) {
-            reportBuilder.append(System.lineSeparator())
-            reportBuilder.append("Input classes excluded from assertions generation:\n")
-            for (Class<?> excludedClass : excludedClassesFromAssertionGeneration) {
-                reportBuilder.append(INDENT).append(excludedClass.getName()).append(System.lineSeparator())
+            if (!excludedClassesFromAssertionGeneration?.isEmpty()) {
+                append(Line)
+                append("Input classes excluded from assertions generation:\n")
+                for (excludedClass in excludedClassesFromAssertionGeneration) {
+                    append(INDENT).append(excludedClass.type.typeName).append(Line)
+                }
             }
         }
     }
@@ -182,30 +191,6 @@ class AssertionsGeneratorReport {
         this.assertionsEntryPointFilesByType.put(assertionsEntryPointType, assertionsEntryPointFile)
     }
 
-    void setInputPackages(Collection<? extends String> packages) {
-        this.inputPackages = packages
-    }
-
-    void setInputClasses(Collection<? extends String> classes) {
-        this.inputClasses = classes
-    }
-
-    void setException(Exception exception) {
-        this.exception = exception
-    }
-
-    Exception getReportedException() {
-        return exception
-    }
-
-    void setExcludedClassesFromAssertionGeneration(Collection<TypeToken<?>> excludedClassSet) {
-        this.excludedClassesFromAssertionGeneration = excludedClassSet
-    }
-
-    Set<String> getInputClassesNotFound() {
-        return inputClassesNotFound
-    }
-
     void reportInputClassesNotFound(Set<Class<?>> classes, String[] inputClassNames) {
         Set<String> classesFound = newTreeSet()
         for (Class<?> clazz : classes) {
@@ -220,9 +205,5 @@ class AssertionsGeneratorReport {
 
     void registerUserTemplate(String userTemplateDescription) {
         userTemplates.add(userTemplateDescription)
-    }
-
-    List<String> getUserTemplates() {
-        return userTemplates
     }
 }
