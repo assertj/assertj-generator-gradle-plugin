@@ -148,7 +148,6 @@ class Templates implements Serializable {
 
     /**
      * Used to reuse some information within the template "categories"
-     * @param <T>                                 CRTP
      */
     abstract static class TemplateHandler {
         protected final ListProperty<Info> templateInfos
@@ -159,10 +158,18 @@ class Templates implements Serializable {
         protected TemplateHandler(ObjectFactory objects) {
             templateInfos = objects.listProperty(Info).empty()
             templates = objects.listProperty(SerializedTemplate).tap {
-                addAll(templateInfos.map { infos -> infos.collect { it.toTemplate() }.findAll { it } })
+                addAll(
+                        templateInfos.map { infos ->
+                            infos.collect { it.toTemplate() }.findAll()
+                        }
+                )
             }
             templateFiles = objects.fileCollection().tap {
-                from(templateInfos.map { infos -> infos.collect { it.fileOrTemplate.file.getOrNull() } })
+                from(
+                        templateInfos.map { infos ->
+                            infos.collect { it.fileOrTemplate.file.getOrNull() }.findAll()
+                        }
+                )
             }
         }
 
