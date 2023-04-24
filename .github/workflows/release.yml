@@ -4,6 +4,7 @@ on:
     types: [ published ]
   push: [ ]
 
+jobs:
   JVM-Run-Gradle-Check:
     runs-on: ubuntu-latest
     steps:
