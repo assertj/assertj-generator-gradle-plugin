@@ -1,5 +1,7 @@
 import com.gradle.publish.PublishTask.GRADLE_PUBLISH_KEY
+import com.gradle.publish.PublishTask.GRADLE_PUBLISH_KEY_ENV
 import com.gradle.publish.PublishTask.GRADLE_PUBLISH_SECRET
+import com.gradle.publish.PublishTask.GRADLE_PUBLISH_SECRET_ENV
 
 plugins {
   id("groovy")
@@ -10,20 +12,19 @@ plugins {
 }
 
 val setupPluginUpload by tasks.registering {
-  // TODO switch this to use github action
-  if ("CI" in System.getenv() && "TRAVIS" in System.getenv()) {
-    // Used for publishing from Travis
+  val key = System.getenv(GRADLE_PUBLISH_KEY_ENV) ?: System.getProperty(GRADLE_PUBLISH_KEY)
+  val secret = System.getenv(GRADLE_PUBLISH_SECRET_ENV) ?: System.getProperty(GRADLE_PUBLISH_SECRET)
 
-    val key = System.getenv(GRADLE_PUBLISH_KEY) ?: System.getProperty(GRADLE_PUBLISH_KEY)
-    val secret = System.getenv(GRADLE_PUBLISH_SECRET) ?: System.getProperty(GRADLE_PUBLISH_SECRET)
-
-    if (key == null || secret == null) {
-      error("GRADLE_PUBLISH_KEY and/or GRADLE_PUBLISH_SECRET are not defined environment variables")
-    }
-
-    System.setProperty(GRADLE_PUBLISH_KEY, key)
-    System.setProperty(GRADLE_PUBLISH_SECRET, secret)
+  if (key == null || secret == null) {
+    error("GRADLE_PUBLISH_KEY and/or GRADLE_PUBLISH_SECRET are not defined environment variables")
   }
+
+  System.setProperty(GRADLE_PUBLISH_KEY, key)
+  System.setProperty(GRADLE_PUBLISH_SECRET, secret)
+
+  // This is the git tag for a release
+  val githubRefName = System.getenv("GITHUB_REF_NAME")
+  version = githubRefName
 }
 
 tasks.named("publishPlugins") {
