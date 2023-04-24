@@ -5,13 +5,18 @@ import com.gradle.publish.PublishTask.GRADLE_PUBLISH_SECRET_ENV
 
 plugins {
   id("groovy")
-  id("org.jetbrains.kotlin.jvm") version "1.8.20"
+  id("org.jetbrains.kotlin.jvm") version "1.8.10"
+
   id("io.gitlab.arturbosch.detekt") version "1.22.0"
-  id("com.gradle.plugin-publish") version "1.2.0"
   id("java-gradle-plugin")
+  id("com.autonomousapps.dependency-analysis") version "1.20.0"
+
+  id("com.gradle.plugin-publish") version "1.2.0"
 }
 
 val setupPluginUpload by tasks.registering {
+  if (System.getenv("GITHUB_ACTION") == null) return@registering
+
   val key = System.getenv(GRADLE_PUBLISH_KEY_ENV) ?: System.getProperty(GRADLE_PUBLISH_KEY)
   val secret = System.getenv(GRADLE_PUBLISH_SECRET_ENV) ?: System.getProperty(GRADLE_PUBLISH_SECRET)
 
@@ -23,8 +28,8 @@ val setupPluginUpload by tasks.registering {
   System.setProperty(GRADLE_PUBLISH_SECRET, secret)
 
   // This is the git tag for a release
-  val githubRefName = System.getenv("GITHUB_REF_NAME")
-  version = githubRefName
+  val githubRefName = System.getenv("GITHUB_REF_NAME")?.trimStart('v')
+  version = checkNotNull(githubRefName) { "No GITHUB_REF_NAME env value defined" }
 }
 
 tasks.named("publishPlugins") {
@@ -58,18 +63,23 @@ repositories {
 
 dependencies {
   api(gradleApi())
-  api(localGroovy())
-
-  api("org.assertj:assertj-core:3.24.2")
+  api("com.google.code.findbugs:jsr305:3.0.2")
   api("org.assertj:assertj-assertions-generator:2.2.1")
 
   implementation(gradleKotlinDsl())
   implementation("com.google.guava:guava:31.1-jre")
 
+  testApi("junit:junit:4.13.2")
+
   testCompileOnly("org.jetbrains:annotations:24.0.1")
 
+  testImplementation(localGroovy())
   testImplementation(gradleTestKit())
-  testImplementation("junit:junit:4.13.2")
+  testImplementation("org.assertj:assertj-core:3.24.2")
+}
+
+tasks.check {
+  dependsOn(tasks.named("projectHealth"))
 }
 
 tasks.compileGroovy {

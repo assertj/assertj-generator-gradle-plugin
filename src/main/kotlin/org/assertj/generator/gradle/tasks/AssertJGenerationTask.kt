@@ -18,7 +18,6 @@ import org.assertj.assertions.generator.BaseAssertionGenerator
 import org.assertj.assertions.generator.description.ClassDescription
 import org.assertj.assertions.generator.description.converter.ClassToClassDescriptionConverter
 import org.assertj.assertions.generator.util.ClassUtil
-import org.assertj.generator.gradle.internal.tasks.AssertionsGeneratorReport
 import org.assertj.generator.gradle.tasks.config.AssertJGeneratorExtension
 import org.assertj.generator.gradle.tasks.config.SerializedTemplate
 import org.gradle.api.DefaultTask
