@@ -67,6 +67,9 @@ open class AssertJGeneratorGradlePlugin @Inject internal constructor(
 
     // Create a new task for the source set
     val generationTask = project.tasks.register<AssertJGenerationTask>(generateTaskName, objects, this)
+    generationTask.configure { task ->
+      task.classDirectories.srcDir(this.java.classesDirectory)
+    }
 
     javaPlugin.sourceSets.named("test").configure { sourceSet ->
       sourceSet.java.srcDir(generationTask.flatMap { it.outputDir })

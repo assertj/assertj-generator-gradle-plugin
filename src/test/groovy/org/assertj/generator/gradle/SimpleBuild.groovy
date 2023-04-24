@@ -15,7 +15,6 @@ package org.assertj.generator.gradle
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -70,6 +69,20 @@ class SimpleBuild {
             }
             """.stripIndent()
 
+        File nestedWorldJava = srcPackagePath.resolve('OtherNestedWorld.java').toFile()
+
+        nestedWorldJava << """
+            package org.example;
+            
+            public final class OtherNestedWorld {
+                public boolean isBrainy = false;
+                
+                public static class Nested {
+                  public boolean isSomethingElse = false;
+                }
+            }
+            """.stripIndent()
+
         File testDir = testProjectDir.newFolder('src', 'test', 'java')
 
         testDir.toPath().resolve(packagePath).toFile().mkdirs()
@@ -81,7 +94,7 @@ class SimpleBuild {
             package org.example;
             
             import org.junit.Test;
-            import static org.example.HelloWorldAssert.assertThat;
+            import static org.example.Assertions.assertThat;
             
             public final class HelloWorldTest {
                 
@@ -90,6 +103,18 @@ class SimpleBuild {
                     HelloWorld hw = new HelloWorld();
                     assertThat(hw).hasFoo(-1)
                                   .doesNotHaveSomeBrains();
+                }
+                
+                @Test
+                public void checkClassWithNested() {
+                    OtherNestedWorld ow = new OtherNestedWorld();
+                    assertThat(ow).isNotBrainy();
+                }
+                
+                @Test
+                public void checkNestedClass() {
+                    OtherNestedWorld.Nested n = new OtherNestedWorld.Nested();
+                    assertThat(n).isNotSomethingElse();
                 }
             }
             """
@@ -133,18 +158,15 @@ class SimpleBuild {
 
         assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
         assert result.task(':test').outcome == TaskOutcome.SUCCESS
-
     }
 
     @Test
-    @Ignore("Test fails due to groovy incompatibility")
     void exclude_class() {
-
         TestUtils.buildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ {
-                        source.exclude '**/org/example/OtherWorld*'
+                        classDirectories.exclude '**/org/example/OtherWorld*'
                     }
                 }
             }
@@ -159,7 +181,10 @@ class SimpleBuild {
 
         assert result.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
         assert result.task(':compileTestJava').outcome == TaskOutcome.SUCCESS
+
+        def packagePath = testProjectDir.root.toPath()
+                .resolve("build/generated-src/main-test/java")
+                .resolve("org/example")
+        assert !packagePath.toFile().listFiles().find { it.name == "OtherWorldAssert.java" }
     }
-
-
 }

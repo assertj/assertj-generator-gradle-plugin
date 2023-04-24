@@ -16,6 +16,7 @@ import org.assertj.assertions.generator.AssertionsEntryPointType
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.SourceSet
 import org.gradle.kotlin.dsl.newInstance
@@ -30,6 +31,9 @@ open class AssertJGeneratorExtension @Inject internal constructor(
   project: Project,
   sourceSet: SourceSet
 ) {
+  val classDirectories: SourceDirectorySet =
+    objects.sourceDirectorySet("assertJClasses", "Classes to generate AssertJ assertions from")
+
   /**
    * Generate generating Soft Assertions entry point class.
    * @return templates value, never {@code null}
