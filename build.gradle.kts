@@ -22,7 +22,9 @@ val setupPluginUpload by tasks.registering {
   System.setProperty(GRADLE_PUBLISH_KEY, key)
   System.setProperty(GRADLE_PUBLISH_SECRET, secret)
 
-  version = System.getenv("GITHUB_REF_NAME")
+  // This is the git tag for a release
+  val githubRefName = System.getenv("GITHUB_REF_NAME")
+  version = githubRefName
 }
 
 tasks.named("publishPlugins") {

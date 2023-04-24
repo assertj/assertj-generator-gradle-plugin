@@ -2,10 +2,9 @@ name: Release
 on:
   release:
     types: [ published ]
-  push: [ ]
 
 jobs:
-  JVM-Run-Gradle-Check:
+  JVM-Run-Gradle-Release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-java@v3
