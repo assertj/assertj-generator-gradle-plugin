@@ -33,8 +33,8 @@ internal class AssertionsGeneratorReport(
   private val inputClassesNotFound = TreeSet<String>()
   private val userTemplates = mutableListOf<String>()
 
-  fun addGeneratedAssertionFiles(vararg generatedCustomAssertionFiles: File) {
-    generatedCustomAssertionFileNames += generatedCustomAssertionFiles.map { it.canonicalPath }
+  fun addGeneratedAssertionFiles(vararg files: File) {
+    generatedCustomAssertionFileNames += files.map { it.canonicalPath }
   }
 
   fun getReportContent(): String = buildString {

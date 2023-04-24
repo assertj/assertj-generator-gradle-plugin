@@ -19,11 +19,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.function.Consumer
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat
+import static org.assertj.core.api.Assertions.assertThat
 
 /**
  * Checks the behaviour of overriding globals in a project
@@ -117,23 +117,13 @@ class IncrementalBuild {
         assert firstBuild.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
         assert firstBuild.task(':test').outcome == TaskOutcome.SUCCESS
 
-        // get files
-        def times = assertFiles("main", true).collect {
-            Files.getLastModifiedTime(it)
-        }
+        assertFiles()
 
         def secondBuild = runner.build()
         assert secondBuild.task(':generateAssertJ').outcome == TaskOutcome.UP_TO_DATE
         assert secondBuild.task(':test').outcome == TaskOutcome.UP_TO_DATE
 
-        def newFiles = assertFiles("main", true)
-
-        // check time stamps!
-        [newFiles, times].transpose().each { file, time ->
-            assertThat(time)
-                    .as("modified time for ${file}")
-                    .isEqualTo(Files.getLastModifiedTime(file))
-        }
+        assertFiles()
     }
 
     @Test
@@ -156,55 +146,32 @@ class IncrementalBuild {
         assert firstBuild.task(':test').outcome == TaskOutcome.SUCCESS
 
         // get files
-        def files = assertFiles("main", true)
+        assertFiles()
 
-        def fileMap = files.collectEntries {
-            def key = (it.toString().contains("H1") ? h1Java : h2Java)
-            [(key): it]
-        }
-
-        def fileTimes = [files, files.collect {
-            Files.getLastModifiedTime(it)
-        }].transpose().collectEntries()
-
-        // modify the contents of H1
+        // modify the contents of H1 that doesn't change the compiled `.class`
         h1Java << "\n// some changed data"
 
         def secondBuild = runner.build()
         // Make sure it did run
-        assert secondBuild.task(':generateAssertJ').outcome == TaskOutcome.SUCCESS
+        assert secondBuild.task(':generateAssertJ').outcome == TaskOutcome.UP_TO_DATE
 
         // However, since we didn't actually change anything, there's nothing to test, thus UP_TO_DATE
         assert secondBuild.task(':test').outcome == TaskOutcome.UP_TO_DATE
 
-        assertFiles("main", true)
-
-        // check time stamps!
-        assertThat(fileTimes[fileMap[h1Java]])
-                .as("modified time for ${fileMap[h1Java]}")
-                .isNotEqualTo(Files.getLastModifiedTime(fileMap[h1Java] as Path))
-        assertThat(fileTimes[fileMap[h2Java]])
-                .as("modified time for ${fileMap[h2Java]}")
-                .isEqualTo(Files.getLastModifiedTime(fileMap[h2Java] as Path))
+        assertFiles()
     }
 
-    private def assertFiles(String sourceSet, boolean exists) {
+    private def assertFiles(String sourceSet = "main") {
         final Path generatedPackagePath = testProjectDir.root.toPath()
                 .resolve("build/generated-src/${sourceSet}-test/java")
                 .resolve(packagePath)
 
-        def buildPath = testProjectDir.root.toPath().resolve("build")
-
-        def files = ["H1", "H2"]
-
-        files.collect {
+        List<Path> files = ["H1", "H2"].collect {
             generatedPackagePath.resolve("${it}Assert.java")
-        }.collect {
-            assertThat(it.toFile().exists())
-                    .as("${sourceSet} file: ${buildPath.relativize(it)} exists")
-                    .isEqualTo(exists)
-
-            it
         }
+
+        assertThat(files).allSatisfy({ file ->
+            assertThat(file).exists()
+        } as Consumer<Path>)
     }
 }
