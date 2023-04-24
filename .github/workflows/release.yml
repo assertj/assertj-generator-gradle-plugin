@@ -2,8 +2,7 @@ name: Release
 on:
   release:
     types: [ published ]
-  push:
-      
+  push: [ ]
 
   JVM-Run-Gradle-Check:
     runs-on: ubuntu-latest
