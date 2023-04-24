@@ -1,0 +1,30 @@
+name: Release
+on:
+  release:
+    types: [ published ]
+  push:
+      
+
+  JVM-Run-Gradle-Check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      - uses: actions/checkout@v3
+
+      # Given we are doing a release, lets make sure we have a safe gradle install
+      - uses: gradle/wrapper-validation-action@v1
+
+      - uses: gradle/gradle-build-action@v2
+
+      - name: Verify all checks pass
+        run: ./gradlew check
+
+      - name: Publish plugin
+        run: ./gradlew publishPlugins
+        env:
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
