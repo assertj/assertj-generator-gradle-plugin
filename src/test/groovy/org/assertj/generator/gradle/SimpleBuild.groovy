@@ -77,7 +77,7 @@ class SimpleBuild {
             public final class OtherNestedWorld {
                 public boolean isBrainy = false;
                 
-                static class Nested {
+                public static class Nested {
                   public boolean isSomethingElse = false;
                 }
             }
@@ -109,6 +109,12 @@ class SimpleBuild {
                 public void checkClassWithNested() {
                     OtherNestedWorld ow = new OtherNestedWorld();
                     assertThat(ow).isNotBrainy();
+                }
+                
+                @Test
+                public void checkNestedClass() {
+                    OtherNestedWorld.Nested n = new OtherNestedWorld.Nested();
+                    assertThat(n).isNotSomethingElse();
                 }
             }
             """

@@ -161,9 +161,9 @@ class IncrementalBuild {
         assertFiles()
     }
 
-    private def assertFiles(String sourceSet = "main") {
+    private def assertFiles() {
         final Path generatedPackagePath = testProjectDir.root.toPath()
-                .resolve("build/generated-src/${sourceSet}-test/java")
+                .resolve("build/generated-src/main-test/java")
                 .resolve(packagePath)
 
         List<Path> files = ["H1", "H2"].collect {

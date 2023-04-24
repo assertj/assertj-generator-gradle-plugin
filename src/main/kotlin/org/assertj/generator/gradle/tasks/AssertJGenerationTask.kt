@@ -252,12 +252,10 @@ private fun getFullyQualifiedClassForFile(srcDirs: List<Path>, path: Path): Stri
   // Ignore package-info.java, it's not supposed to be included.
   if (path.fileName == PACKAGE_INFO_PATH) return null
   val className = path.nameWithoutExtension
-  if ('$' in className) return null
 
   val srcDir = srcDirs.single { path.startsWith(it) }
-  val relativePath = path.relativeTo(srcDir).parent
+  val relativePath = path.relativeTo(srcDir).parent.toString()
+    .replace(File.separatorChar, '.')
 
   return "$relativePath.$className"
-    .replace(File.separatorChar, '.')
-    .replace('$', '.')
 }
