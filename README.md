@@ -15,16 +15,16 @@ the [AssertJ Generator Maven Plugin](http://joel-costigliola.github.io/assertj/a
 Below is a minimal configuration that will cause _all_ classes defined in the `main` source set to have an `AssertJ`
 assertion generated for it. All of these will be placed into the highest package in use.
 
-This plugin requires Gradle 4.0.
+This plugin is built with Gradle 7.6.
 
-```gradle
+```groovy
 plugins {
   id 'org.assertj.generator' version '0.0.6b'
 }
 
 sourceSets {
   main {
-      // must specify assertJ block to have it applied
+      // Configurations are per source-set
       assertJ { }
   }
 }
@@ -78,7 +78,7 @@ is set to `false` for the source set.
 
 The following example turns _off_ generation for `main`. All classes found within `main` will be ignored.
 
-```gradle
+```groovy
 sourceSets {
   main {
     assertJ { skip = true } // sets skip = true
@@ -90,7 +90,7 @@ sourceSets {
 If debugging a build, it may be useful to turn off generation for a `sourceSet`. To do this, inside the configuration
 block, set `skip = true`.
 
-```gradle
+```groovy
 sourceSets {
   brokenGeneration {
     assertJ {
@@ -118,7 +118,7 @@ The following example changes the output directory for _all_ source sets to be
 `${buildDir}/src-gen/${sourceSet.testName}/java/`. The same change could be applied to a local
 scope.
 
-```gradle
+```groovy
 sourceSets {
   main {
     // turn on assertJ generation
@@ -149,7 +149,7 @@ The names of templates mirror those from the AssertJ Documentation, but the actu
 The following example replaces the whole number field with a custom template for only the `main` sourceSet, any others
 remain unaffected.
 
-```gradle
+```groovy
 sourceSets {
   main {
     assertJ {
@@ -167,7 +167,7 @@ The following example changes the template to a `file()` template for the `main`
 accepts any parameter allowed by
 [`Project#file(...)`](https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#org.gradle.api.Project:file(java.lang.Object)).
 
-```gradle
+```groovy
 sourceSets {
   main {
     assertJ {
@@ -184,7 +184,7 @@ sourceSets {
 
 We can root all files under a directory by using a file from the scoped `project`:
 
-```gradle
+```groovy
 sourceSets {
   main {
     assertJ {
@@ -220,7 +220,7 @@ value to entry point:
 By default, only the `standard` style is turned on. To adjust this, simply set the values to `true` within the
 `entryPoints` closure.
 
-```gradle
+```groovy
 sourceSets {
   main {
     assertJ {
@@ -236,7 +236,7 @@ sourceSets {
 
 A useful trick to turn on _only_ a set of values is to just set the `entryPoints` to a collection of types:
 
-```gradle
+```groovy
 sourceSets {
     main {
         assertJ {
@@ -248,7 +248,7 @@ sourceSets {
 
 Or within the `entryPoints` closure:
 
-```gradle
+```groovy
 sourceSets {
     main {
         assertJ {
