@@ -3,11 +3,10 @@ package org.assertj.generator.gradle.tasks.config.patterns
 import java.io.IOException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
-import java.io.Serializable
 import java.util.function.Predicate
 
 @Suppress("UNCHECKED_CAST")
-sealed class JavaIdentifierNamePatternFilterableBase<T, SELF> : Serializable
+sealed class JavaIdentifierNamePatternFilterableBase<T, SELF>
     where SELF : JavaIdentifierNamePatternFilterableBase<T, SELF> {
   private var includePredicates = mutableSetOf<PatternPredicate<T>>()
   private var excludePredicates = mutableSetOf<PatternPredicate<T>>()
@@ -17,7 +16,7 @@ sealed class JavaIdentifierNamePatternFilterableBase<T, SELF> : Serializable
   internal fun asPredicate(): Predicate<T> {
     return Predicate { t ->
       (includePredicates.isEmpty() || includePredicates.any { it.test(t) }) &&
-        (excludePredicates.isEmpty() || excludePredicates.none { it.test(t) })
+          (excludePredicates.isEmpty() || excludePredicates.none { it.test(t) })
     }
   }
 
@@ -56,7 +55,7 @@ sealed class JavaIdentifierNamePatternFilterableBase<T, SELF> : Serializable
   }
 
   @Throws(IOException::class)
-  protected fun writeObject(o: ObjectOutputStream) {
+  protected fun writeObjectImpl(o: ObjectOutputStream) {
     o.writeInt(includePredicates.size)
     for (pattern in includePredicates.map { it.pattern }) {
       o.writeUTF(pattern)
@@ -69,15 +68,11 @@ sealed class JavaIdentifierNamePatternFilterableBase<T, SELF> : Serializable
   }
 
   @Throws(IOException::class, ClassNotFoundException::class)
-  protected fun readObject(i: ObjectInputStream) {
+  protected fun readObjectImpl(i: ObjectInputStream) {
     val includesSize = i.readInt()
-    include((0 until includesSize).map { i.readUTF() })
+    setIncludes((0 until includesSize).map { i.readUTF() })
 
     val excludesSize = i.readInt()
-    exclude((0 until excludesSize).map { i.readUTF() })
-  }
-
-  companion object {
-    private const val serialVersionUID = 2032386L
+    setExcludes((0 until excludesSize).map { i.readUTF() })
   }
 }
