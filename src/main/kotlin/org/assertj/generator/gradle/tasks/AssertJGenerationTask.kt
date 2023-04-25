@@ -20,6 +20,7 @@ import org.assertj.assertions.generator.description.converter.ClassToClassDescri
 import org.assertj.assertions.generator.util.ClassUtil
 import org.assertj.generator.gradle.tasks.config.AssertJGeneratorExtension
 import org.assertj.generator.gradle.tasks.config.SerializedTemplate
+import org.assertj.generator.gradle.tasks.config.patterns.JavaClassPatternFilterable
 import org.assertj.generator.gradle.tasks.config.patterns.JavaPackageNamePatternFilterable
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -84,6 +85,9 @@ open class AssertJGenerationTask @Inject internal constructor(
   internal val hierarchical: Property<Boolean> = objects.property()
 
   @get:Input
+  internal val classesFilterable: Property<JavaClassPatternFilterable> = objects.property()
+
+  @get:Input
   internal val packagesFilterable: Property<JavaPackageNamePatternFilterable> = objects.property()
 
   @get:Input
@@ -114,6 +118,7 @@ open class AssertJGenerationTask @Inject internal constructor(
 
     skip.set(project.provider { assertJOptions.skip })
     hierarchical.set(project.provider { assertJOptions.hierarchical })
+    classesFilterable.set(project.provider { assertJOptions.classes })
     packagesFilterable.set(project.provider { assertJOptions.packages })
     entryPoints.set(project.provider { assertJOptions.entryPoints.entryPoints })
     entryPointsClassPackage.set(project.provider { assertJOptions.entryPoints.classPackage })
@@ -130,6 +135,7 @@ open class AssertJGenerationTask @Inject internal constructor(
 
     val classLoader = URLClassLoader((generationClasspath + classDirectories).map { it.toURI().toURL() }.toTypedArray())
 
+    val classesPredicate = classesFilterable.get().asPredicate()
     val packagesPredicate = packagesFilterable.get().asPredicate()
     val allClassNames = getClassNames(classDirectories)
       .filter { packagesPredicate.test(it.substringBeforeLast('.')) }
@@ -138,7 +144,9 @@ open class AssertJGenerationTask @Inject internal constructor(
     val allClasses = ClassUtil.collectClasses(
       classLoader,
       *allClassNames.toTypedArray(),
-    )
+    ).asSequence()
+      .filter { classesPredicate.test(it) }
+      .toSet()
 
     val changedFiles = if (inputs.isIncremental) {
       inputs.getFileChanges(classDirectories).asSequence().map { it.file }.filter { it.isFile }.toSet()

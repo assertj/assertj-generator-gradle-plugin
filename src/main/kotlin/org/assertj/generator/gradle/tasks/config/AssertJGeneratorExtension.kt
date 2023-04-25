@@ -13,6 +13,7 @@
 package org.assertj.generator.gradle.tasks.config
 
 import org.assertj.assertions.generator.AssertionsEntryPointType
+import org.assertj.generator.gradle.tasks.config.patterns.JavaClassPatternFilterable
 import org.assertj.generator.gradle.tasks.config.patterns.JavaPackageNamePatternFilterable
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -34,6 +35,12 @@ open class AssertJGeneratorExtension @Inject internal constructor(
 ) {
   val classDirectories: SourceDirectorySet =
     objects.sourceDirectorySet("assertJClasses", "Classes to generate AssertJ assertions from")
+
+  val classes: JavaClassPatternFilterable = objects.newInstance()
+
+  fun classes(action: Action<in JavaClassPatternFilterable>): AssertJGeneratorExtension = apply {
+    action.execute(classes)
+  }
 
   val packages: JavaPackageNamePatternFilterable = objects.newInstance()
 
