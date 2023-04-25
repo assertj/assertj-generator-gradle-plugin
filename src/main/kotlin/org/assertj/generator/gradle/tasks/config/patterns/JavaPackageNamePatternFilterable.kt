@@ -19,12 +19,12 @@ open class JavaPackageNamePatternFilterable internal constructor() :
   }
 
   @Throws(IOException::class)
-  private fun writeObject(o: ObjectOutputStream) {
+  protected fun writeObject(o: ObjectOutputStream) {
     super.writeObjectImpl(o)
   }
 
   @Throws(IOException::class, ClassNotFoundException::class)
-  private fun readObject(i: ObjectInputStream) {
+  protected fun readObject(i: ObjectInputStream) {
     super.readObjectImpl(i)
   }
 
