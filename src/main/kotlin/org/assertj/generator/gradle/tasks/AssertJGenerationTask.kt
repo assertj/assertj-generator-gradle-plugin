@@ -20,6 +20,7 @@ import org.assertj.assertions.generator.description.converter.ClassToClassDescri
 import org.assertj.assertions.generator.util.ClassUtil
 import org.assertj.generator.gradle.tasks.config.AssertJGeneratorExtension
 import org.assertj.generator.gradle.tasks.config.SerializedTemplate
+import org.assertj.generator.gradle.tasks.config.patterns.JavaPackageNamePatternFilterable
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -77,10 +78,13 @@ open class AssertJGenerationTask @Inject internal constructor(
   val outputDir: DirectoryProperty
 
   @get:Input
-  internal val skip: Property<Boolean> = objects.property<Boolean>()
+  internal val skip: Property<Boolean> = objects.property()
 
   @get:Input
-  internal val hierarchical: Property<Boolean> = objects.property<Boolean>()
+  internal val hierarchical: Property<Boolean> = objects.property()
+
+  @get:Input
+  internal val packagesFilterable: Property<JavaPackageNamePatternFilterable> = objects.property()
 
   @get:Input
   internal val entryPoints: SetProperty<AssertionsEntryPointType> = objects.setProperty()
@@ -110,6 +114,7 @@ open class AssertJGenerationTask @Inject internal constructor(
 
     skip.set(project.provider { assertJOptions.skip })
     hierarchical.set(project.provider { assertJOptions.hierarchical })
+    packagesFilterable.set(project.provider { assertJOptions.packages })
     entryPoints.set(project.provider { assertJOptions.entryPoints.entryPoints })
     entryPointsClassPackage.set(project.provider { assertJOptions.entryPoints.classPackage })
   }
@@ -125,7 +130,9 @@ open class AssertJGenerationTask @Inject internal constructor(
 
     val classLoader = URLClassLoader((generationClasspath + classDirectories).map { it.toURI().toURL() }.toTypedArray())
 
+    val packagesPredicate = packagesFilterable.get().asPredicate()
     val allClassNames = getClassNames(classDirectories)
+      .filter { packagesPredicate.test(it.substringBeforeLast('.')) }
 
     @Suppress("SpreadOperator") // Java interop
     val allClasses = ClassUtil.collectClasses(

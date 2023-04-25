@@ -201,6 +201,29 @@ sourceSets {
 }
 ```
 
+#### packages - `JavaPackageNamePatternFilterable`
+
+Default: All packages
+
+Package filters can be used to include, or exclude individual or groups of packages to be generated. These filters use a
+similar pattern to `include`/`exclude` with `SourceSet`.
+
+```groovy
+sourceSets {
+  main {
+    assertJ {
+      packages {
+        include "org.example**" // include *all* packages in `org.example`
+        exclude "org.example.foo" // exclude `org.example.foo` specifically
+      }
+    }
+  }
+}
+```
+
+See [`PackageFilter` tests](src/test/groovy/org/assertj/generator/gradle/parameter/PackageFilter.groovy) for more
+examples.
+
 #### entryPoints - `EntryPointsGeneratorOptions`
 
 Default: Only generate "standard" assertion entrypoint
@@ -238,11 +261,11 @@ A useful trick to turn on _only_ a set of values is to just set the `entryPoints
 
 ```groovy
 sourceSets {
-    main {
-        assertJ {
-            entryPoints = ['BDD', 'JUNIT_SOFT'] // turn on _only_ BDD and JUnit Soft
-        }
+  main {
+    assertJ {
+      entryPoints = ['BDD', 'JUNIT_SOFT'] // turn on _only_ BDD and JUnit Soft
     }
+  }
 }
 ```
 
@@ -250,13 +273,13 @@ Or within the `entryPoints` closure:
 
 ```groovy
 sourceSets {
-    main {
-        assertJ {
-            entryPoints {
-                only 'BDD', 'JUNIT_SOFT' // turn on _only_ BDD and JUnit Soft
-            }
-        }
+  main {
+    assertJ {
+      entryPoints {
+        only 'BDD', 'JUNIT_SOFT' // turn on _only_ BDD and JUnit Soft
+      }
     }
+  }
 }
 ```
 

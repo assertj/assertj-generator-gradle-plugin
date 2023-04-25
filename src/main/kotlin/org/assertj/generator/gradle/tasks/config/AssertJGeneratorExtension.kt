@@ -13,6 +13,7 @@
 package org.assertj.generator.gradle.tasks.config
 
 import org.assertj.assertions.generator.AssertionsEntryPointType
+import org.assertj.generator.gradle.tasks.config.patterns.JavaPackageNamePatternFilterable
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
@@ -34,6 +35,12 @@ open class AssertJGeneratorExtension @Inject internal constructor(
   val classDirectories: SourceDirectorySet =
     objects.sourceDirectorySet("assertJClasses", "Classes to generate AssertJ assertions from")
 
+  val packages: JavaPackageNamePatternFilterable = objects.newInstance()
+
+  fun packages(action: Action<in JavaPackageNamePatternFilterable>): AssertJGeneratorExtension = apply {
+    action.execute(packages)
+  }
+
   /**
    * Generate generating Soft Assertions entry point class.
    * @return templates value, never {@code null}
@@ -44,9 +51,8 @@ open class AssertJGeneratorExtension @Inject internal constructor(
    * Method used for improving configuration DSL
    * @return {@code this}
    */
-  fun templates(action: Action<in Templates>): AssertJGeneratorExtension {
+  fun templates(action: Action<in Templates>): AssertJGeneratorExtension = apply {
     action.execute(templates)
-    return this
   }
 
   /**
@@ -82,9 +88,8 @@ open class AssertJGeneratorExtension @Inject internal constructor(
    * Used to change "entry point" class generation.
    * @return this
    */
-  fun entryPoints(action: Action<in EntryPointGeneratorOptions>): AssertJGeneratorExtension {
+  fun entryPoints(action: Action<in EntryPointGeneratorOptions>): AssertJGeneratorExtension = apply {
     action.execute(entryPoints)
-    return this
   }
 
   /**
