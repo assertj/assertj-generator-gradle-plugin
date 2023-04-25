@@ -28,7 +28,7 @@ sealed class JavaIdentifierNamePatternFilterableBase<T, SELF>
   internal fun asPredicate(): Predicate<T> {
     return Predicate { t ->
       (includePredicates.isEmpty() || includePredicates.any { it.test(t) }) &&
-          (excludePredicates.isEmpty() || excludePredicates.none { it.test(t) })
+        (excludePredicates.isEmpty() || excludePredicates.none { it.test(t) })
     }
   }
 
