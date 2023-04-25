@@ -12,15 +12,21 @@
  */
 package org.assertj.generator.gradle.tasks.config.patterns
 
+private const val WILDCARD_MARKER = "!!WILDCARD_MARKER!!"
+
 internal object JavaNamePatternCompiler {
   fun compilePattern(pattern: String): Regex {
-    return Regex(
-      pattern
-        .replace(".", "\\.")
-        .replace("$", "\\$")
-        .replace("**", "[\\w\\.]!!WILDCARD_MARKER!!")
-        .replace("*", "\\w!!WILDCARD_MARKER!!")
-        .replace("!!WILDCARD_MARKER!!", "*")
-    )
+    val escapedPackageCharacters = pattern
+      .replace(".", "\\.")
+      .replace("$", "\\$")
+
+    // Order matters because if we do single "*" first we double remove the "**"
+    val withWildcardMarkers = escapedPackageCharacters
+      .replace("**", "[\\w\\.]$WILDCARD_MARKER")
+      .replace("*", "\\w$WILDCARD_MARKER")
+
+    val withRegexWildcards = withWildcardMarkers.replace(WILDCARD_MARKER, "*")
+
+    return Regex(withRegexWildcards)
   }
 }
