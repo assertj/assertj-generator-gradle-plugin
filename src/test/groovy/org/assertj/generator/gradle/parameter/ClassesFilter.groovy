@@ -27,9 +27,9 @@ import java.util.function.Supplier
 import static org.assertj.core.api.Assertions.assertThat
 
 /**
- * Checks that we can include/exclude classes via the `packages` filter.
+ * Checks that we can include/exclude classes via the `classes` filter.
  */
-class PackageFilter {
+class ClassesFilter {
 
     @Rule
     public final TemporaryFolder testProjectDir = new TemporaryFolder()
@@ -103,15 +103,15 @@ class PackageFilter {
     }
 
     @Test
-    void include_package_simple() {
+    void include_class_simple() {
         buildFile {
             """
             assertJ {
                 entryPoints {
                     classPackage = "org.example"
                 }
-                packages {
-                    include "org.example.hello"
+                classes {
+                    include "org.example.hello.HelloWorld"
                 }
             }
             """.stripIndent()
@@ -127,15 +127,15 @@ class PackageFilter {
     }
 
     @Test
-    void include_package_pattern() {
+    void include_class_pattern() {
         buildFile {
             """
             assertJ {
                 entryPoints {
                     classPackage = "org.example"
                 }
-                packages {
-                    include "org.example.he*"
+                classes {
+                    include "org.example.hello.Hello*"
                 }
             }
             """.stripIndent()
@@ -151,15 +151,15 @@ class PackageFilter {
     }
 
     @Test
-    void include_package_that_does_not_exist_and_valid() {
+    void include_class_that_does_not_exist_and_valid() {
         buildFile {
             """
             assertJ {
                 entryPoints {
                     classPackage = "org.example"
                 }
-                packages {
-                    include "org.example.he*", "org.example.does_not_exist"
+                classes {
+                    include "org.example.hello.*", "org.example.does_not_exist"
                 }
             }
             """.stripIndent()
@@ -175,14 +175,14 @@ class PackageFilter {
     }
 
     @Test
-    void include_package_double_wildcard() {
+    void include_class_double_wildcard() {
         buildFile {
             """
             assertJ {
                 entryPoints {
                     classPackage = "org.example"
                 }
-                packages {
+                classes {
                     include "org.example.hello**"
                 }
             }
@@ -199,15 +199,15 @@ class PackageFilter {
     }
 
     @Test
-    void exclude_package_simple() {
+    void exclude_class_simple() {
         buildFile {
             """
             assertJ {
                 entryPoints {
                     classPackage = "org.example"
                 }
-                packages {
-                    exclude "org.example.other"
+                classes {
+                    exclude "org.example.other.OtherWorld"
                 }
             }
             """.stripIndent()
@@ -223,15 +223,15 @@ class PackageFilter {
     }
 
     @Test
-    void exclude_package_pattern() {
+    void exclude_class_pattern() {
         buildFile {
             """
             assertJ {
                 entryPoints {
                     classPackage = "org.example"
                 }
-                packages {
-                    exclude "org.example.ot*"
+                classes {
+                    exclude "org.example.other.*"
                 }
             }
             """.stripIndent()
@@ -246,34 +246,16 @@ class PackageFilter {
         assertThat(generatedBasePackagePath.resolve("hello/sub")).exists()
     }
 
-    private File setupTestHelloAndSub() {
-        testFile {
-            """
-            @Test
-            public void checkHello() {
-                HelloWorld hw = new HelloWorld();
-                assertThat(hw).doesNotHaveSomeBrains();
-            }
-            
-            @Test
-            public void checkOther() {
-                SubHelloWorld shw = new SubHelloWorld();
-                assertThat(shw).hasFoo(-1);
-            }
-            """.stripIndent()
-        }
-    }
-
     @Test
-    void exclude_package_that_does_not_exist_and_valid() {
+    void exclude_class_that_does_not_exist_and_valid() {
         buildFile {
             """
             assertJ {
                 entryPoints {
                     classPackage = "org.example"
                 }
-                packages {
-                    exclude "org.example.ot*", "org.example.does_not_exist"
+                classes {
+                    exclude "org.example.other.*", "org.example.does_not_exist"
                 }
             }
             """.stripIndent()
@@ -303,14 +285,14 @@ class PackageFilter {
     }
 
     @Test
-    void exclude_package_double_wildcard() {
+    void exclude_class_double_wildcard() {
         buildFile {
             """
             assertJ {
                 entryPoints {
                     classPackage = "org.example"
                 }
-                packages {
+                classes {
                     exclude "org.example.**"
                 }
             }
@@ -341,16 +323,16 @@ class PackageFilter {
     }
 
     @Test
-    void include_double_wildcard_but_exclude_specific_package() {
+    void include_double_wildcard_but_exclude_specific_class() {
         buildFile {
             """
             assertJ {
                 entryPoints {
                     classPackage = "org.example"
                 }
-                packages {
+                classes {
                     include "org.example.hello**"
-                    exclude "org.example.hello.sub"
+                    exclude "org.example.hello.sub.*"
                 }
             }
             """.stripIndent()
@@ -433,5 +415,23 @@ class PackageFilter {
                 ${testContent.get()}
             }
             """.stripIndent()
+    }
+
+    private File setupTestHelloAndSub() {
+        testFile {
+            """
+            @Test
+            public void checkHello() {
+                HelloWorld hw = new HelloWorld();
+                assertThat(hw).doesNotHaveSomeBrains();
+            }
+            
+            @Test
+            public void checkOther() {
+                SubHelloWorld shw = new SubHelloWorld();
+                assertThat(shw).hasFoo(-1);
+            }
+            """.stripIndent()
+        }
     }
 }

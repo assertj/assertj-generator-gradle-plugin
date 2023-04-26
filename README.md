@@ -224,6 +224,30 @@ sourceSets {
 See [`PackageFilter` tests](src/test/groovy/org/assertj/generator/gradle/parameter/PackageFilter.groovy) for more
 examples.
 
+#### classes - `JavaClassPatternFilterable`
+
+Default: All classes
+
+Class filters can be used to include, or exclude individual patterns of fully-qualified class names to be generated.
+These filters use a
+similar pattern to `include`/`exclude` with `SourceSet`.
+
+```groovy
+sourceSets {
+  main {
+    assertJ {
+      classes {
+        include "org.example.**" // include *all* classes under `org.example` including sub-packages
+        exclude "org.example.Foo" // exclude class `org.example.Foo` specifically
+      }
+    }
+  }
+}
+```
+
+See [`ClassesFilter` tests](src/test/groovy/org/assertj/generator/gradle/parameter/ClassesFilter.groovy) for more
+examples.
+
 #### entryPoints - `EntryPointsGeneratorOptions`
 
 Default: Only generate "standard" assertion entrypoint
