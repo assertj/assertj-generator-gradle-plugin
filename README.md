@@ -19,26 +19,26 @@ This plugin is built with Gradle 7.6.
 
 ```groovy
 plugins {
-    id 'org.assertj.generator' version '0.0.6b'
+  id 'org.assertj.generator' version '0.0.6b'
 }
 
 sourceSets {
-    main {
-        // Configurations are per source-set
-        assertJ {}
-    }
+  main {
+      // Configurations are per source-set
+      assertJ { }
+  }
 }
 
 // add some classpath dependencies
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    // https://mvnrepository.com/artifact/org.assertj/assertj-core
-    testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
+  // https://mvnrepository.com/artifact/org.assertj/assertj-core
+  testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
 
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+  testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 ```
 
@@ -80,10 +80,10 @@ The following example turns _off_ generation for `main`. All classes found withi
 
 ```groovy
 sourceSets {
-    main {
-        assertJ { skip = true } // sets skip = true
-    }
-    test {}
+  main {
+    assertJ { skip = true } // sets skip = true
+  }
+  test { }
 }
 ```
 
@@ -92,15 +92,15 @@ block, set `skip = true`.
 
 ```groovy
 sourceSets {
-    brokenGeneration {
-        assertJ {
-            skip = true // no assertions will be generated for
-            // "brokenGeneration"
-            // other parameters follow, order of assignment of different
-            // parameters does not matter, like with gradle
-        }
+  brokenGeneration {
+    assertJ {
+      skip = true // no assertions will be generated for
+                  // "brokenGeneration"
+      // other parameters follow, order of assignment of different
+      // parameters does not matter, like with gradle
     }
-    test {}
+  }
+  test { }
 }
 ```
 
@@ -120,13 +120,13 @@ scope.
 
 ```groovy
 sourceSets {
-    main {
-        // turn on assertJ generation
-        assertJ {
-            // default: ${buildDir}/generated-srcs/${sourceSet.name}-test/java
-            outputDir = file("src-gen/main-test/java")
-        }
-    }
+  main {
+    // turn on assertJ generation
+    assertJ { 
+      // default: ${buildDir}/generated-srcs/${sourceSet.name}-test/java
+      outputDir = file("src-gen/main-test/java")
+    } 
+  }
 }
 ```
 
@@ -151,15 +151,15 @@ remain unaffected.
 
 ```groovy
 sourceSets {
-    main {
-        assertJ {
-            templates {
-                methods {
-                    wholeNumberPrimitive.template('public get${Property}() { }')
-                }
-            }
+  main {
+    assertJ {
+      templates {
+        methods {
+          wholeNumberPrimitive.template('public get${Property}() { }')
         }
+      }
     }
+  }
 }
 ```
 
@@ -169,16 +169,16 @@ accepts any parameter allowed by
 
 ```groovy
 sourceSets {
-    main {
-        assertJ {
-            templates {
-                // Set the template to file content: ./wholeNumberOverride.txt
-                methods {
-                    wholeNumberPrimitive.file('wholeNumberOverride.txt')
-                }
-            }
+  main {
+    assertJ {
+      templates {
+        // Set the template to file content: ./wholeNumberOverride.txt
+        methods {
+          wholeNumberPrimitive.file('wholeNumberOverride.txt')
         }
+      } 
     }
+  }
 }
 ```
 
@@ -186,18 +186,18 @@ We can root all files under a directory by using a file from the scoped `project
 
 ```groovy
 sourceSets {
-    main {
-        assertJ {
-            templates {
-                // Set all templates in this block to be relative to the folder specified
-                def rootDirectory = projectDir.dir("gradle/other-templates")
-
-                // Change the file content to:
-                //      ${projectDir}/gradle/other-templates/wholeNumberOverride.txt
-                wholeNumberAssertion.file(rootDirectory.file('wholeNumberOverride.txt'))
-            }
-        }
+  main {
+    assertJ {
+      templates {
+        // Set all templates in this block to be relative to the folder specified
+        def rootDirectory = projectDir.dir("gradle/other-templates")
+  
+        // Change the file content to:
+        //      ${projectDir}/gradle/other-templates/wholeNumberOverride.txt
+        wholeNumberAssertion.file(rootDirectory.file('wholeNumberOverride.txt'))
+      }         
     }
+  }
 }
 ```
 
@@ -210,14 +210,14 @@ similar pattern to `include`/`exclude` with `SourceSet`.
 
 ```groovy
 sourceSets {
-    main {
-        assertJ {
-            packages {
-                include "org.example**" // include *all* packages in `org.example`
-                exclude "org.example.foo" // exclude `org.example.foo` specifically
-            }
-        }
+  main {
+    assertJ {
+      packages {
+        include "org.example**" // include *all* packages in `org.example`
+        exclude "org.example.foo" // exclude `org.example.foo` specifically
+      }
     }
+  }
 }
 ```
 
@@ -234,14 +234,14 @@ similar pattern to `include`/`exclude` with `SourceSet`.
 
 ```groovy
 sourceSets {
-    main {
-        assertJ {
-            classes {
-                include "org.example.**" // include *all* classes under `org.example` including sub-packages
-                exclude "org.example.Foo" // exclude class `org.example.Foo` specifically
-            }
-        }
+  main {
+    assertJ {
+      classes {
+        include "org.example.**" // include *all* classes under `org.example` including sub-packages
+        exclude "org.example.Foo" // exclude class `org.example.Foo` specifically
+      }
     }
+  }
 }
 ```
 
@@ -269,15 +269,15 @@ By default, only the `standard` style is turned on. To adjust this, simply set t
 
 ```groovy
 sourceSets {
-    main {
-        assertJ {
-            entryPoints {
-                standard = false // No more standard generation
-                bdd = true       // Turn on BDD
-                junitSoft = true // and JUnit Soft
-            }
-        }
+  main {
+    assertJ {
+      entryPoints {
+        standard = false // No more standard generation
+        bdd = true       // Turn on BDD
+        junitSoft = true // and JUnit Soft
+      } 
     }
+  }
 }
 ```
 
@@ -285,11 +285,11 @@ A useful trick to turn on _only_ a set of values is to just set the `entryPoints
 
 ```groovy
 sourceSets {
-    main {
-        assertJ {
-            entryPoints = ['BDD', 'JUNIT_SOFT'] // turn on _only_ BDD and JUnit Soft
-        }
+  main {
+    assertJ {
+      entryPoints = ['BDD', 'JUNIT_SOFT'] // turn on _only_ BDD and JUnit Soft
     }
+  }
 }
 ```
 
@@ -297,13 +297,13 @@ Or within the `entryPoints` closure:
 
 ```groovy
 sourceSets {
-    main {
-        assertJ {
-            entryPoints {
-                only 'BDD', 'JUNIT_SOFT' // turn on _only_ BDD and JUnit Soft
-            }
-        }
+  main {
+    assertJ {
+      entryPoints {
+        only 'BDD', 'JUNIT_SOFT' // turn on _only_ BDD and JUnit Soft
+      }
     }
+  }
 }
 ```
 
