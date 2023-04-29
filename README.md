@@ -1,7 +1,7 @@
 # AssertJ Generator Gradle Plugin
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/assertj/assertj-generator-gradle-plugin/ci.yml)
-[![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/org.assertj.generator)](https://plugins.gradle.org/plugin/org.assertj.generator.gradle.plugin)
+[![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/org.assertj.generator)](https://plugins.gradle.org/plugin/org.assertj.generator)
 
 This is the source for the Gradle plugin for the
 [AssertJ Generator](http://joel-costigliola.github.io/assertj/assertj-assertions-generator.html). This plugin leverages
