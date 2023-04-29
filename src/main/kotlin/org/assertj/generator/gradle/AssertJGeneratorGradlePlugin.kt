@@ -20,9 +20,13 @@ import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
+import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import javax.inject.Inject
 
 private val logger = Logging.getLogger(AssertJGeneratorGradlePlugin::class.java)
@@ -45,34 +49,67 @@ open class AssertJGeneratorGradlePlugin @Inject internal constructor(
         // For each sourceSet we're enacting an action on each one that adds an assertJ generation task to it
         logger.info("sourceSet: $sourceSet creating tasks")
 
+        sourceSet.extensions.create<AssertJGeneratorExtension>(
+          "assertJ",
+          objects,
+          project,
+          sourceSet,
+        )
+
         sourceSet.addAndConfigureAssertJGenerate(project, javaPluginExtension)
+      }
+
+      // If we don't have the java plugin, we can't compile the generated sources. Thus, this is in the
+      // withPlugin() block
+      project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+        project.applyForKotlin(javaPluginExtension)
       }
     }
   }
 
-  private fun SourceSet.addAndConfigureAssertJGenerate(
-    project: Project,
-    javaPlugin: JavaPluginExtension,
-  ) {
-    extensions.create<AssertJGeneratorExtension>(
-      "assertJ",
-      objects,
-      project,
-      this,
-    )
+  private fun Project.applyForKotlin(javaPluginExtension: JavaPluginExtension) {
+    kotlinExtension.sourceSets.configureEach { kotlinSourceSet ->
+      if (kotlinSourceSet.name == "test") return@configureEach
 
-    val generateTaskName = getTaskName("generate", "assertJ")
+      javaPluginExtension.sourceSets.named(kotlinSourceSet.name) { javaSourceSet ->
+        val kotlinCompile = project.tasks.named<KotlinCompile>(javaSourceSet.getCompileTaskName("kotlin"))
 
-    logger.info("generationTask: $generateTaskName, sourceSet: $this")
+        project.configureGenerateTask(javaSourceSet) {
+          dependsOn(kotlinCompile)
 
-    // Create a new task for the source set
-    val generationTask = project.tasks.register<AssertJGenerationTask>(generateTaskName, objects, this)
-    generationTask.configure { task ->
-      task.classDirectories.srcDir(this.java.classesDirectory)
+          classDirectories.srcDir(kotlinCompile.flatMap { it.destinationDirectory })
+        }
+      }
+    }
+  }
+
+  private fun SourceSet.addAndConfigureAssertJGenerate(project: Project, javaPlugin: JavaPluginExtension) {
+    val generationTask = project.registerGenerateTask(this) {
+      classDirectories.srcDir(this@addAndConfigureAssertJGenerate.java.classesDirectory)
     }
 
     javaPlugin.sourceSets.named("test").configure { sourceSet ->
       sourceSet.java.srcDir(generationTask.flatMap { it.outputDir })
     }
   }
+
+  private fun Project.registerGenerateTask(
+    sourceSet: SourceSet,
+    configureBlock: AssertJGenerationTask.() -> Unit,
+  ): TaskProvider<AssertJGenerationTask> {
+    return tasks.register<AssertJGenerationTask>(sourceSet.generateAssertJTaskName, objects, sourceSet).apply {
+      configure(configureBlock)
+    }
+  }
+
+  private fun Project.configureGenerateTask(
+    sourceSet: SourceSet,
+    configureBlock: AssertJGenerationTask.() -> Unit,
+  ): TaskProvider<AssertJGenerationTask> {
+    return tasks.named<AssertJGenerationTask>(sourceSet.generateAssertJTaskName) {
+      configureBlock()
+    }
+  }
 }
+
+private val SourceSet.generateAssertJTaskName: String get() = getTaskName("generate", "assertJ")

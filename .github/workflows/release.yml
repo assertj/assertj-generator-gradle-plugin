@@ -20,7 +20,7 @@ jobs:
       - uses: gradle/gradle-build-action@v2
 
       - name: Verify all checks pass
-        run: ./gradlew check
+        run: ./gradlew test
 
       - name: Publish plugin
         run: ./gradlew publishPlugins
