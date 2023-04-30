@@ -53,13 +53,13 @@ internal class OutputDirectoryParameter {
 
     mainJava.writeJava(
       """
-             package org.example;
-             
-             public final class Main {
-                 // Field
-                 public boolean hasSomeBrains = false;
-             }
-             """
+       package org.example;
+       
+       public final class Main {
+           // Field
+           public boolean hasSomeBrains = false;
+       }
+       """
     )
   }
 
@@ -67,15 +67,15 @@ internal class OutputDirectoryParameter {
   fun change_output_dir_locally() {
     buildFile.writeBuildFile(
       """            
-          sourceSets {
-              main { 
-                  assertJ {
-                      // default: generated-srcs/SOURCE_SET_NAME-test/java
-                      outputDir = file('src-gen/foo-bar/java')
-                  }
-              }
-          }
-          """
+        sourceSets {
+            main { 
+                assertJ {
+                    // default: generated-srcs/SOURCE_SET_NAME-test/java
+                    outputDir = file('src-gen/foo-bar/java')
+                }
+            }
+        }
+        """
     )
 
     val result = GradleRunner.create()
@@ -93,6 +93,7 @@ internal class OutputDirectoryParameter {
 
   private fun assertFiles(folderName: String, exists: Boolean) {
     val sourceSet = "main"
+    
     val generatedPackagePath = testProjectDir.root.toPath()
       .resolve("src-gen/$folderName/java")
       .resolve(packagePath)
