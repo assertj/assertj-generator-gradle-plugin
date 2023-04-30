@@ -62,12 +62,15 @@ repositories {
 }
 
 dependencies {
+  implementation(kotlin("stdlib"))
+
   api(gradleApi())
   api("com.google.code.findbugs:jsr305:3.0.2")
   api("org.assertj:assertj-assertions-generator:2.2.1")
 
   implementation(gradleKotlinDsl())
   implementation("com.google.guava:guava:31.1-jre")
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10")
 
   testApi("junit:junit:4.13.2")
 
@@ -88,14 +91,6 @@ tasks.testClasses {
 
 tasks.check {
   dependsOn(tasks.named("projectHealth"))
-}
-
-tasks.compileGroovy {
-  classpath += files(tasks.compileKotlin.flatMap { it.destinationDirectory })
-}
-
-tasks.classes {
-  dependsOn(tasks.compileGroovy)
 }
 
 detekt {

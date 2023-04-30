@@ -53,4 +53,32 @@ internal object TestUtils {
 
   @JvmStatic
   fun File.writeDefaultBuildFile(): Unit = this.writeBuildFile("")
+
+  fun File.writeBuildKts(@Language("Kotlin") content: String = "") {
+    writeKotlin(
+      """
+      plugins { 
+          id("org.assertj.generator")
+          `java`
+          id("org.jetbrains.kotlin.jvm") version "1.8.10"
+      } 
+      
+      $content
+      
+      repositories {
+          mavenCentral()
+      }
+      
+      dependencies {
+          implementation(kotlin("stdlib"))
+          implementation("javax.annotation:javax.annotation-api:1.3.2")
+
+          testImplementation("org.assertj:assertj-core:3.24.2")
+          testImplementation("junit:junit:4.13.1")
+      }
+      """.trimIndent()
+    )
+  }
+
+  fun File.writeDefaultBuildKts(): Unit = this.writeBuildKts("")
 }
