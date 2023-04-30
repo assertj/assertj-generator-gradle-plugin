@@ -93,7 +93,7 @@ internal class OutputDirectoryParameter {
 
   private fun assertFiles(folderName: String, exists: Boolean) {
     val sourceSet = "main"
-    
+
     val generatedPackagePath = testProjectDir.root.toPath()
       .resolve("src-gen/$folderName/java")
       .resolve(packagePath)
