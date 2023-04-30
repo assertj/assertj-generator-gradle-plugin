@@ -12,7 +12,6 @@
  */
 package org.assertj.generator.gradle
 
-import groovy.lang.GString
 import org.intellij.lang.annotations.Language
 import java.io.File
 
@@ -20,9 +19,6 @@ import java.io.File
  * Utilities used in test scripts
  */
 internal object TestUtils {
-  @JvmStatic
-  fun File.writeBuildFile(@Language("Groovy") content: GString) = writeBuildFile(content.toString())
-
   @JvmStatic
   fun File.writeBuildFile(@Language("Groovy") content: String) {
     writeGroovy(

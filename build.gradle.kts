@@ -69,33 +69,16 @@ dependencies {
   implementation(gradleKotlinDsl())
   implementation("com.google.guava:guava:31.1-jre")
 
-  testApi("junit:junit:4.13.2")
-
   testCompileOnly("org.jetbrains:annotations:24.0.1")
 
   testImplementation(localGroovy())
   testImplementation(gradleTestKit())
+  testImplementation("junit:junit:4.13.2")
   testImplementation("org.assertj:assertj-core:3.24.2")
-}
-
-tasks.compileTestGroovy {
-  classpath += files(tasks.compileTestKotlin.flatMap { it.destinationDirectory })
-}
-
-tasks.testClasses {
-  dependsOn(tasks.compileTestGroovy)
 }
 
 tasks.check {
   dependsOn(tasks.named("projectHealth"))
-}
-
-tasks.compileGroovy {
-  classpath += files(tasks.compileKotlin.flatMap { it.destinationDirectory })
-}
-
-tasks.classes {
-  dependsOn(tasks.compileGroovy)
 }
 
 detekt {
