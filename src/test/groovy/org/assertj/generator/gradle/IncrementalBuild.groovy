@@ -37,7 +37,6 @@ class IncrementalBuild {
     @Rule
     public final TemporaryFolder testProjectDir = new TemporaryFolder()
 
-    File buildFile
     private Path srcPackagePath
     private Path packagePath
     private File h1Java
@@ -45,7 +44,8 @@ class IncrementalBuild {
 
     @Before
     void setup() {
-        buildFile = testProjectDir.newFile('build.gradle')
+        def buildFile = testProjectDir.newFile('build.gradle')
+        TestUtils.writeDefaultBuildFile(buildFile)
 
         File srcDir = testProjectDir.newFolder('src', 'main', 'java')
 
@@ -100,12 +100,6 @@ class IncrementalBuild {
 
     @Test
     void incremental_build_does_not_rebuild_everything() {
-        TestUtils.buildFile(buildFile, """                      
-            sourceSets {
-                main { assertJ {} }
-            }
-            """)
-
         def runner = GradleRunner.create()
                 .withProjectDir(testProjectDir.root)
                 .withDebug(true)
@@ -128,12 +122,6 @@ class IncrementalBuild {
 
     @Test
     void incremental_build_rebuild_changed_single_file_contents() {
-        TestUtils.buildFile(buildFile, """                      
-            sourceSets {
-                main { assertJ {} }
-            }
-            """)
-
         def runner = GradleRunner.create()
                 .withProjectDir(testProjectDir.root)
                 .withDebug(true)

@@ -72,7 +72,7 @@ class TemplateChanges {
     @Test
     void change_default_template_from_sourceSet() {
 
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ {
@@ -105,7 +105,7 @@ class TemplateChanges {
     @Test
     void change_default_template_from_global() {
 
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ { 
@@ -138,7 +138,7 @@ class TemplateChanges {
     @Test
     void incremental_templates_with_no_changes() {
 
-        TestUtils.buildFile(buildFile, """            
+        TestUtils.writeBuildFile(buildFile, """            
             sourceSets {
                 main {
                     assertJ {
@@ -178,7 +178,7 @@ class TemplateChanges {
     @Test
     void incremental_templates_after_string_change() {
 
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ { 
@@ -209,7 +209,7 @@ class TemplateChanges {
 
         def NEW_TEMPLATE_CONTENT = '/* % NEW CONTENT % */'
         buildFile.delete()
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ { 
@@ -233,7 +233,7 @@ class TemplateChanges {
 
     @Test
     void incremental_templates_change_type() {
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ { 
@@ -271,7 +271,7 @@ class TemplateChanges {
         def contentPath = testProjectDir.root.toPath().relativize(content.toPath()).toString().replace('\\', '/')
 
         buildFile.delete()
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ {
@@ -300,7 +300,7 @@ class TemplateChanges {
 
         def contentPath = testProjectDir.root.toPath().relativize(content.toPath()).toString().replace('\\', '/')
 
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                      assertJ {
@@ -344,7 +344,7 @@ class TemplateChanges {
     @Test
     void bad_template_name_should_fail() {
 
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ {

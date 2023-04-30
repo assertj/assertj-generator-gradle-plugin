@@ -21,11 +21,11 @@ import java.io.File
  */
 internal object TestUtils {
   @JvmStatic
-  fun File.buildFile(@Language("Groovy") content: GString) = buildFile(content.toString().trimIndent())
+  fun File.writeBuildFile(@Language("Groovy") content: GString) = writeBuildFile(content.toString())
 
   @JvmStatic
-  fun File.buildFile(@Language("Groovy") content: String) {
-    writeText(
+  fun File.writeBuildFile(@Language("Groovy") content: String) {
+    writeGroovy(
       """
       // Add required plugins and source sets to the sub projects
       plugins { 
@@ -50,4 +50,7 @@ internal object TestUtils {
       """.trimIndent()
     )
   }
+
+  @JvmStatic
+  fun File.writeDefaultBuildFile(): Unit = this.writeBuildFile("")
 }
