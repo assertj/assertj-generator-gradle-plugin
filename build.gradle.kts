@@ -81,6 +81,14 @@ dependencies {
   testImplementation("org.assertj:assertj-core:3.24.2")
 }
 
+tasks.compileTestGroovy {
+  classpath += files(tasks.compileTestKotlin.flatMap { it.destinationDirectory })
+}
+
+tasks.testClasses {
+  dependsOn(tasks.compileTestGroovy)
+}
+
 tasks.check {
   dependsOn(tasks.named("projectHealth"))
 }

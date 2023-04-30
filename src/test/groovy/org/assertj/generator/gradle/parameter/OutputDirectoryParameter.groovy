@@ -24,7 +24,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
-import static org.assertj.generator.gradle.TestUtils.buildFile
+import static org.assertj.generator.gradle.TestUtils.writeBuildFile
 
 /**
  * Checks the behaviour of overriding globals in a project
@@ -63,7 +63,7 @@ class OutputDirectoryParameter {
 
     @Test
     void change_output_dir_locally() {
-        buildFile(buildFile, """            
+        writeBuildFile(buildFile, """            
             sourceSets {
                 main { 
                     assertJ {
