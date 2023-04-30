@@ -72,21 +72,12 @@ dependencies {
   implementation("com.google.guava:guava:31.1-jre")
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10")
 
-  testApi("junit:junit:4.13.2")
-
   testCompileOnly("org.jetbrains:annotations:24.0.1")
 
   testImplementation(localGroovy())
   testImplementation(gradleTestKit())
+  testImplementation("junit:junit:4.13.2")
   testImplementation("org.assertj:assertj-core:3.24.2")
-}
-
-tasks.compileTestGroovy {
-  classpath += files(tasks.compileTestKotlin.flatMap { it.destinationDirectory })
-}
-
-tasks.testClasses {
-  dependsOn(tasks.compileTestGroovy)
 }
 
 tasks.check {

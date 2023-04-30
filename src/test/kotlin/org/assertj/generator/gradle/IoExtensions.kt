@@ -5,11 +5,11 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.writeText
 
-fun File.writeJava(@Language("java") content: String): Unit = writeText(content.trimIndent())
-fun Path.writeJava(@Language("java") content: String): Unit = writeText(content.trimIndent())
+internal fun File.writeJava(@Language("java") content: String): Unit = writeText(content.trimIndent())
+internal fun Path.writeJava(@Language("java") content: String): Unit = writeText(content.trimIndent())
 
-fun File.writeGroovy(@Language("groovy") content: String): Unit = writeText(content.trimIndent())
-fun Path.writeGroovy(@Language("groovy") content: String): Unit = writeText(content.trimIndent())
+internal fun File.writeGroovy(@Language("groovy") content: String): Unit = writeText(content.trimIndent())
+internal fun Path.writeGroovy(@Language("groovy") content: String): Unit = writeText(content.trimIndent())
 
-fun File.writeKotlin(@Language("kotlin") content: String): Unit = writeText(content.trimIndent())
-fun Path.writeKotlin(@Language("kotlin") content: String): Unit = writeText(content.trimIndent())
+internal fun File.writeKotlin(@Language("kotlin") content: String): Unit = writeText(content.trimIndent())
+internal fun Path.writeKotlin(@Language("kotlin") content: String): Unit = writeText(content.trimIndent())
