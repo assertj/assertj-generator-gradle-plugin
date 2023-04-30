@@ -77,7 +77,7 @@ class SkipParameter {
 
     @Test
     void skip_other_set() {
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ { skip = true }
@@ -100,7 +100,7 @@ class SkipParameter {
 
     @Test
     void generate_default() {
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ { skip = false }

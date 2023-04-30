@@ -32,12 +32,12 @@ class SkipPackageInfo {
     @Rule
     public final TemporaryFolder testProjectDir = new TemporaryFolder()
 
-    File buildFile
-    Path generatedPackagePath
+    private Path generatedPackagePath
 
     @Before
     void setup() {
-        buildFile = testProjectDir.newFile('build.gradle')
+        def buildFile = testProjectDir.newFile('build.gradle')
+        TestUtils.writeDefaultBuildFile(buildFile)
 
         File srcDir = testProjectDir.newFolder('src', 'main', 'java')
 
@@ -112,12 +112,6 @@ class SkipPackageInfo {
 
     @Test
     void does_not_include_package_info_file() {
-        TestUtils.buildFile(buildFile, """                      
-            sourceSets {
-                main { assertJ {} }
-            }
-            """)
-
         def result = GradleRunner.create()
                 .withProjectDir(testProjectDir.root)
                 .withDebug(true)

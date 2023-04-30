@@ -82,7 +82,7 @@ class EntryPointGeneration {
 
     @Test
     void change_generate_from_sourceSet() {
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ {
@@ -124,7 +124,7 @@ class EntryPointGeneration {
     @Test
     void change_generate_from_global() {
 
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ { 
@@ -162,7 +162,7 @@ class EntryPointGeneration {
 
     @Test
     void change_entry_point_package() {
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ {
@@ -199,7 +199,7 @@ class EntryPointGeneration {
 
     @Test
     void change_entry_point_package_and_entry_points() {
-        TestUtils.buildFile(buildFile, """
+        TestUtils.writeBuildFile(buildFile, """
             sourceSets {
                 main {
                     assertJ {
