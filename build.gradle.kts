@@ -70,7 +70,14 @@ dependencies {
 
   implementation(gradleKotlinDsl())
   implementation("com.google.guava:guava:31.1-jre")
-  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.21")
+
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10")
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.8.10")
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.8.10") {
+    capabilities {
+      requireCapability("org.jetbrains.kotlin:kotlin-gradle-plugin-api-gradle76")
+    }
+  }
 
   testCompileOnly("org.jetbrains:annotations:24.0.1")
 
