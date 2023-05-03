@@ -2,6 +2,7 @@
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/assertj/assertj-generator-gradle-plugin/ci.yml)
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/org.assertj.generator)](https://plugins.gradle.org/plugin/org.assertj.generator)
+[![Licence](https://img.shields.io/github/license/assertj/assertj-generator-gradle-plugin)](./LICENSE)
 
 This is the source for the Gradle plugin for the
 [AssertJ Generator](http://joel-costigliola.github.io/assertj/assertj-assertions-generator.html). This plugin leverages
@@ -10,23 +11,19 @@ easier to integrate the AssertJ Generator into existing Gradle-based projects. T
 provided by
 the [AssertJ Generator Maven Plugin](http://joel-costigliola.github.io/assertj/assertj-assertions-generator-maven-plugin.html).
 
+This plugin will automatically detect Kotlin, and Java sources. The plugin automatically configures the generation step
+for each `SourceSet` (except `test`) in a Gradle project when applied.
+
 ## Quick Start
 
-Below is a minimal configuration that will cause _all_ classes defined in the `main` source set to have an `AssertJ`
-assertion generated for it. All of these will be placed into the highest package in use.
+Below is a minimal configuration that will cause _all_ classes defined in the `main` source set to have an `assertJ`
+assertion generated for it. All of these will be placed into the longest common package of the sources presented.
 
 This plugin is built with Gradle 7.6.
 
 ```groovy
 plugins {
-  id 'org.assertj.generator' version '0.0.6b'
-}
-
-sourceSets {
-  main {
-      // Configurations are per source-set
-      assertJ { }
-  }
+  id 'org.assertj.generator' version '1.1.0'
 }
 
 // add some classpath dependencies
@@ -35,35 +32,28 @@ repositories {
 }
 
 dependencies {
-  // https://mvnrepository.com/artifact/org.assertj/assertj-core
-  testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
-
+  testCompile group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
   testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 ```
 
+## License
+
+This plugin is licensed under the [Apache License](./LICENSE).
+
 ## Configuration
 
-Primary configuration of included/excluded files is done via the same mechanisms that are used for Gradle's SourceSet
+Primary configuration of included/excluded files is done via the same mechanisms that are used for Gradle's `SourceSet`
 DSL. For explanation on how filters work, please review the
 [Java Plugin Tutorial for Gradle](https://docs.gradle.org/current/userguide/java_plugin.html#sec:changing_java_project_layout).
-This plugin utilizes the filters to gather classes to run against the generator. **This is different than how the
-AssertJ
-Generator normally functions** -- this plugin does not work on class/package names, but folder/file patterns like the
-Java plugin.
-
-### Plugin Version
-
-The plugin version is tied to the version of
-the [AssertJ Generator](http://joel-costigliola.github.io/assertj/assertj-assertions-generator.html).
-The version of the generator used will always match the plugin's version.
+This plugin utilizes the filters to gather classes to run against the generator.
 
 ### Parameters
 
 The following sections outline the available parameters, linking to the appropriate generator docs when available.
 
 For any unlisted parameters, please see the
-[javadoc for `AssertJGeneratorOptions`](./src/main/groovy/org/assertj/generator/gradle/tasks/AssertJGeneratorOptions.groovy)
+[javadoc for `AssertJGeneratorExtension`](./src/main/kotlin/org/assertj/generator/gradle/tasks/config/AssertJGeneratorExtension.kt)
 and open issues for unclear/missing documentation.
 
 #### skip - `boolean`
@@ -81,9 +71,8 @@ The following example turns _off_ generation for `main`. All classes found withi
 ```groovy
 sourceSets {
   main {
-    assertJ { skip = true } // sets skip = true
+      assertJ { skip = true } // sets skip = true
   }
-  test { }
 }
 ```
 
@@ -94,13 +83,9 @@ block, set `skip = true`.
 sourceSets {
   brokenGeneration {
     assertJ {
-      skip = true // no assertions will be generated for
-                  // "brokenGeneration"
-      // other parameters follow, order of assignment of different
-      // parameters does not matter, like with gradle
+      skip = true // no assertions will be generated for "brokenGeneration"
     }
   }
-  test { }
 }
 ```
 
@@ -114,18 +99,16 @@ Changing this parameter will place all generated files into the passed directory
 relative to the _build_ directory as any sources should not be checked into source control and destroyed with `clean`.
 However, in true Gradle tradition, this may use any absolute path.
 
-The following example changes the output directory for _all_ source sets to be
-`${buildDir}/src-gen/${sourceSet.testName}/java/`. The same change could be applied to a local
-scope.
+The following example changes the output directory for the `main` `SourceSet` to be
+`${buildDir}/src-gen/main-test/java`.
 
 ```groovy
 sourceSets {
   main {
-    // turn on assertJ generation
-    assertJ { 
+    assertJ {
       // default: ${buildDir}/generated-srcs/${sourceSet.name}-test/java
       outputDir = file("src-gen/main-test/java")
-    } 
+    }
   }
 }
 ```
@@ -135,10 +118,7 @@ sourceSets {
 Default: Built-in templates
 
 Templates can be configured to change the output of the generator. The templates to be replaced can be specified via
-either `String`s or `File`s. Within this Closure, all paths are relative to where they are defined. For example, if
-defined in the global scope, files are relative to `${projectDir}/assertj-templates` by default, for local scopes, the
-path of the source set (e.g. `main` implies templates are in `src/main/assertj-templates`). This convention may be
-overridden by specifying the `dir` parameter within the block.
+either `String`s or `File`s.
 
 For more information on template syntax, please see the
 [AssertJ Generator Templates Section](http://joel-costigliola.github.io/assertj/assertj-assertions-generator.html#generated-assertions-templates).
@@ -165,7 +145,7 @@ sourceSets {
 
 The following example changes the template to a `file()` template for the `main` source sets. The `file()` method
 accepts any parameter allowed by
-[`Project#file(...)`](https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#org.gradle.api.Project:file(java.lang.Object)).
+[`Project#file(...)`](https://docs.gradle.org/7.6.1/dsl/org.gradle.api.Project.html#org.gradle.api.Project:file(java.lang.Object)).
 
 ```groovy
 sourceSets {
@@ -176,26 +156,7 @@ sourceSets {
         methods {
           wholeNumberPrimitive.file('wholeNumberOverride.txt')
         }
-      } 
-    }
-  }
-}
-```
-
-We can root all files under a directory by using a file from the scoped `project`:
-
-```groovy
-sourceSets {
-  main {
-    assertJ {
-      templates {
-        // Set all templates in this block to be relative to the folder specified
-        def rootDirectory = projectDir.dir("gradle/other-templates")
-  
-        // Change the file content to:
-        //      ${projectDir}/gradle/other-templates/wholeNumberOverride.txt
-        wholeNumberAssertion.file(rootDirectory.file('wholeNumberOverride.txt'))
-      }         
+      }
     }
   }
 }
@@ -215,13 +176,13 @@ sourceSets {
       packages {
         include "org.example**" // include *all* packages in `org.example`
         exclude "org.example.foo" // exclude `org.example.foo` specifically
-      }
+     }
     }
   }
 }
 ```
 
-See [`PackageFilter` tests](src/test/groovy/org/assertj/generator/gradle/parameter/PackageFilter.groovy) for more
+See [`PackageFilter` tests](src/test/kotlin/org/assertj/generator/gradle/parameter/PackageFilter.kt) for more
 examples.
 
 #### classes - `JavaClassPatternFilterable`
@@ -245,7 +206,7 @@ sourceSets {
 }
 ```
 
-See [`ClassesFilter` tests](src/test/groovy/org/assertj/generator/gradle/parameter/ClassesFilter.groovy) for more
+See [`ClassesFilter` tests](src/test/kotlin/org/assertj/generator/gradle/parameter/ClassesFilter.kt) for more
 examples.
 
 #### entryPoints - `EntryPointsGeneratorOptions`
@@ -264,6 +225,9 @@ value to entry point:
 | `junitSoft` | `JUNIT_SOFT` | [JUnit Soft](http://joel-costigliola.github.io/assertj/assertj-core-features-highlight.html#soft-assertions)                    |
 | `soft`      | `SOFT`       | [Soft](http://joel-costigliola.github.io/assertj/assertj-core-features-highlight.html#soft-assertions)                          |
 
+(This table is likely incomplete, please see
+the [AssertJ Generator Docs](http://joel-costigliola.github.io/assertj/assertj-assertions-generator.html#generated-entry-points))
+
 By default, only the `standard` style is turned on. To adjust this, simply set the values to `true` within the
 `entryPoints` closure.
 
@@ -275,7 +239,7 @@ sourceSets {
         standard = false // No more standard generation
         bdd = true       // Turn on BDD
         junitSoft = true // and JUnit Soft
-      } 
+      }
     }
   }
 }
@@ -319,8 +283,7 @@ This plugin injects itself where it is needed for complete compilation.
 
 1. Java code that will be "generated from" is compiled
 2. These compiled classes and the source files "classpath" are used to generate the files
-3. These files are placed into the source path for the `test` sourceSet (TODO configurable?)
-4. The `test` set is compiled
+3. These files are placed into the source compilation path for the `SourceSet`'s `compileJava` task
 
 ## Alternatives
 
@@ -334,7 +297,3 @@ Currently, known:
   Generator
 * [fhermansson/assertj-generator-gradle-plugin](https://github.com/fhermansson/assertj-generator-gradle-plugin) - only
   works on a single source-set and still just wraps package/class names as strings
-
-## License
-
-This plugin is licensed under the Apache License. See [LICENSE](./LICENSE) for more details.
