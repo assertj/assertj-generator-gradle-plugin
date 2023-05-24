@@ -19,7 +19,7 @@ import java.util.function.Predicate
 
 @Suppress("UNCHECKED_CAST")
 sealed class JavaIdentifierNamePatternFilterableBase<T, SELF>
-    where SELF : JavaIdentifierNamePatternFilterableBase<T, SELF> {
+  where SELF : JavaIdentifierNamePatternFilterableBase<T, SELF> {
   private var includePredicates = mutableSetOf<PatternPredicate<T>>()
   private var excludePredicates = mutableSetOf<PatternPredicate<T>>()
 
