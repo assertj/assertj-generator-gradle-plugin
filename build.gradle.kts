@@ -7,7 +7,7 @@ plugins {
   id("groovy")
   id("org.jetbrains.kotlin.jvm") version "1.8.10"
 
-  id("io.gitlab.arturbosch.detekt") version "1.22.0"
+  id("io.gitlab.arturbosch.detekt") version "1.23.0"
   id("java-gradle-plugin")
   id("com.autonomousapps.dependency-analysis") version "1.20.0"
 
