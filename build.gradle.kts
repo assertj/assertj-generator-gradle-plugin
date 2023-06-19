@@ -4,11 +4,10 @@ import com.gradle.publish.PublishTask.GRADLE_PUBLISH_SECRET
 import com.gradle.publish.PublishTask.GRADLE_PUBLISH_SECRET_ENV
 
 plugins {
-  id("groovy")
-  id("org.jetbrains.kotlin.jvm") version "1.8.10"
+  id("java-gradle-plugin")
+  id("org.jetbrains.kotlin.jvm") version "1.8.22"
 
   id("io.gitlab.arturbosch.detekt") version "1.23.0"
-  id("java-gradle-plugin")
   id("com.autonomousapps.dependency-analysis") version "1.20.0"
 
   id("com.gradle.plugin-publish") version "1.2.0"
@@ -70,7 +69,14 @@ dependencies {
 
   implementation(gradleKotlinDsl())
   implementation("com.google.guava:guava:32.0.1-jre")
+
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10")
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.8.10")
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.8.10") {
+    capabilities {
+     requireCapability("org.jetbrains.kotlin:kotlin-gradle-plugin-api-gradle76")
+    }
+  }
 
   testCompileOnly("org.jetbrains:annotations:24.0.1")
 
@@ -89,7 +95,7 @@ detekt {
   autoCorrect = true
 
   buildUponDefaultConfig = true // preconfigure defaults
-  config = files("$rootDir/config/detekt-config.yml")
+  config.from("$rootDir/config/detekt-config.yml")
 
   allRules = false // activate all available (even unstable) rules.
 }
