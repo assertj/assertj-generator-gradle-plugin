@@ -71,8 +71,8 @@ dependencies {
   implementation("com.google.guava:guava:32.1.1-jre")
 
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")
-  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.8.22")
-  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.8.22") {
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.9.0")
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.9.0") {
     capabilities {
      requireCapability("org.jetbrains.kotlin:kotlin-gradle-plugin-api-gradle76")
     }
