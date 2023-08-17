@@ -12,141 +12,43 @@
  */
 package org.assertj.generator.gradle
 
+import net.navatwo.gradle.testkit.junit5.GradleProject
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.generator.gradle.TestUtils.writeBuildFile
 import org.assertj.generator.gradle.TestUtils.writeDefaultBuildFile
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
+import org.junit.jupiter.api.Test
 import java.io.File
-import java.nio.file.Paths
 
 /**
  * Checks the behaviour of overriding globals in a project
  */
 internal class SimpleBuild {
 
-  @get:Rule
-  val testProjectDir = TemporaryFolder()
-
-  private lateinit var buildFile: File
-
-  @Before
-  fun setup() {
-    buildFile = testProjectDir.newFile("build.gradle")
-
-    val srcDir = testProjectDir.newFolder("src", "main", "java")
-
-    val packagePath = Paths.get("org/example/")
-
-    val srcPackagePath = srcDir.toPath().resolve(packagePath)
-    srcPackagePath.toFile().mkdirs()
-    val helloWorldJava = srcPackagePath.resolve("HelloWorld.java").toFile()
-
-    helloWorldJava.writeJava(
-      """
-      package org.example;
-      
-      public final class HelloWorld {
-          
-          // Field
-          public boolean hasSomeBrains = false;
-          
-          // Getter
-          public int getFoo() {
-              return -1;
-          }
-      }
-      """
-    )
-
-    val otherWorldJava = srcPackagePath.resolve("OtherWorld.java").toFile()
-
-    otherWorldJava.writeJava(
-      """
-      package org.example;
-      
-      public final class OtherWorld {
-          public boolean isBrainy = false;
-      }
-      """
-    )
-
-    val nestedWorldJava = srcPackagePath.resolve("OtherNestedWorld.java").toFile()
-
-    nestedWorldJava.writeJava(
-      """
-      package org.example;
-      
-      public final class OtherNestedWorld {
-          public boolean isBrainy = false;
-          
-          public static class Nested {
-            public boolean isSomethingElse = false;
-          }
-      }
-      """
-    )
-
-    val testDir = testProjectDir.newFolder("src", "test", "java")
-
-    testDir.toPath().resolve(packagePath).toFile().mkdirs()
-    val testPackagePath = testDir.toPath().resolve(packagePath)
-    testPackagePath.toFile().mkdirs()
-    val helloWorldTestJava = testPackagePath.resolve("HelloWorldTest.java").toFile()
-
-    helloWorldTestJava.writeJava(
-      """
-      package org.example;
-      
-      import org.junit.Test;
-      import static org.example.Assertions.assertThat;
-      
-      public final class HelloWorldTest {
-          
-          @Test
-          public void check() {
-              HelloWorld hw = new HelloWorld();
-              assertThat(hw).hasFoo(-1)
-                            .doesNotHaveSomeBrains();
-          }
-          
-          @Test
-          public void checkClassWithNested() {
-              OtherNestedWorld ow = new OtherNestedWorld();
-              assertThat(ow).isNotBrainy();
-          }
-          
-          @Test
-          public void checkNestedClass() {
-              OtherNestedWorld.Nested n = new OtherNestedWorld.Nested();
-              assertThat(n).isNotSomethingElse();
-          }
-      }
-      """
-    )
-  }
+  private val File.buildFile: File
+    get() = resolve("build.gradle")
 
   @Test
-  fun `for single class`() {
-    buildFile.writeDefaultBuildFile()
+  @GradleProject("simple-build")
+  fun `for single class`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile.writeDefaultBuildFile()
 
-    val result = GradleRunner.create()
-      .withProjectDir(testProjectDir.root)
-      .withDebug(true)
-      .withPluginClasspath()
-      .withArguments("-i", "-s", "test")
-      .build()
+    val result = runner.withArguments("-i", "-s", "test").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()
   }
 
   @Test
-  fun `exclude class`() {
-    buildFile.writeBuildFile(
+  @GradleProject("simple-build")
+  fun `exclude class`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile.writeBuildFile(
       """
       sourceSets {
           main {
@@ -158,17 +60,12 @@ internal class SimpleBuild {
       """
     )
 
-    val result = GradleRunner.create()
-      .withProjectDir(testProjectDir.root)
-      .withDebug(true)
-      .withPluginClasspath()
-      .withArguments("-i", "-s", "test")
-      .build()
+    val result = runner.withArguments("-i", "-s", "test").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()
 
-    val packagePath = testProjectDir.root.toPath()
+    val packagePath = root.toPath()
       .resolve("build/generated-src/main-test/java")
       .resolve("org/example")
     assertThat(packagePath).isDirectoryNotContaining("glob:**/OtherWorldAssert.java")

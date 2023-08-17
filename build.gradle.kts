@@ -74,7 +74,7 @@ dependencies {
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.9.0")
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.9.0") {
     capabilities {
-     requireCapability("org.jetbrains.kotlin:kotlin-gradle-plugin-api-gradle76")
+      requireCapability("org.jetbrains.kotlin:kotlin-gradle-plugin-api-gradle76")
     }
   }
 
@@ -82,8 +82,19 @@ dependencies {
 
   testImplementation(localGroovy())
   testImplementation(gradleTestKit())
-  testImplementation("junit:junit:4.13.2")
+
+  val junitVersion = "5.10.0"
   testImplementation("org.assertj:assertj-core:3.24.2")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+  testImplementation("net.navatwo:gradle-plugin-better-testing-junit5:0.0.0")
+
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+}
+
+tasks.test {
+  useJUnitPlatform()
+
+  jvmArgs("-Djunit.jupiter.extensions.autodetection.enabled=true")
 }
 
 tasks.check {
