@@ -70,7 +70,7 @@ dependencies {
   implementation(gradleKotlinDsl())
   implementation("com.google.guava:guava:32.1.2-jre")
 
-  val kotlinVersion = "1.6.21"
+  val kotlinVersion = "1.9.0"
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:$kotlinVersion")
 
