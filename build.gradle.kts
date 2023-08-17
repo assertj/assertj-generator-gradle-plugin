@@ -70,13 +70,8 @@ dependencies {
   implementation(gradleKotlinDsl())
   implementation("com.google.guava:guava:32.1.2-jre")
 
-  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")
-  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.9.0")
-  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.9.0") {
-    capabilities {
-      requireCapability("org.jetbrains.kotlin:kotlin-gradle-plugin-api-gradle76")
-    }
-  }
+  val kotlinVersion = "1.6.21"
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
 
   testCompileOnly("org.jetbrains:annotations:24.0.1")
 
