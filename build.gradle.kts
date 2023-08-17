@@ -14,21 +14,21 @@ plugins {
 }
 
 val setupPluginUpload by tasks.registering {
-  if (System.getenv("GITHUB_ACTION") == null) return@registering
+  if (!providers.environmentVariable("GITHUB_ACTION").isPresent) return@registering
 
-  val key = System.getenv(GRADLE_PUBLISH_KEY_ENV) ?: System.getProperty(GRADLE_PUBLISH_KEY)
-  val secret = System.getenv(GRADLE_PUBLISH_SECRET_ENV) ?: System.getProperty(GRADLE_PUBLISH_SECRET)
+  val key = providers.environmentVariable(GRADLE_PUBLISH_KEY_ENV)
+    .orElse(providers.systemProperty(GRADLE_PUBLISH_KEY))
 
-  if (key == null || secret == null) {
-    error("GRADLE_PUBLISH_KEY and/or GRADLE_PUBLISH_SECRET are not defined environment variables")
+  val secret = providers.environmentVariable(GRADLE_PUBLISH_SECRET_ENV)
+    .orElse(providers.systemProperty(GRADLE_PUBLISH_SECRET))
+
+  if (!key.isPresent || !secret.isPresent) {
+    error("GRADLE_PUBLISH_KEY and/or GRADLE_PUBLISH_SECRET are not defined environment or system variables")
   }
 
-  System.setProperty(GRADLE_PUBLISH_KEY, key)
-  System.setProperty(GRADLE_PUBLISH_SECRET, secret)
-
   // This is the git tag for a release
-  val githubRefName = System.getenv("GITHUB_REF_NAME")?.trimStart('v')
-  version = checkNotNull(githubRefName) { "No GITHUB_REF_NAME env value defined" }
+  val githubRefName = providers.environmentVariable("GITHUB_REF_NAME").map { it.trimStart('v') }
+  version = checkNotNull(githubRefName.orNull) { "No GITHUB_REF_NAME env value defined" }
 }
 
 tasks.named("publishPlugins") {
@@ -72,6 +72,7 @@ dependencies {
 
   val kotlinVersion = "1.6.21"
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:$kotlinVersion")
 
   testCompileOnly("org.jetbrains:annotations:24.0.1")
 
@@ -109,7 +110,7 @@ detekt {
   autoCorrect = true
 
   buildUponDefaultConfig = true // preconfigure defaults
-  config.from("$rootDir/config/detekt-config.yml")
+  config.from("$rootDir/detekt.yaml")
 
   allRules = false // activate all available (even unstable) rules.
 }
