@@ -92,6 +92,14 @@ tasks.test {
   jvmArgs("-Djunit.jupiter.extensions.autodetection.enabled=true")
 }
 
+sourceSets {
+  test {
+    resources {
+      srcDir("src/test/projects")
+    }
+  }
+}
+
 tasks.check {
   dependsOn(tasks.named("projectHealth"))
 }

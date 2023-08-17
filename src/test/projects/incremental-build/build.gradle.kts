@@ -4,12 +4,6 @@ plugins {
   kotlin("jvm") version "1.9.0"
 }
 
-buildscript {
-  dependencies {
-    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")
-  }
-}
-
 repositories {
   mavenCentral()
 }
