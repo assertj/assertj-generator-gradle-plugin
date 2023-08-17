@@ -12,105 +12,37 @@
  */
 package org.assertj.generator.gradle.parameter
 
+import net.navatwo.gradle.testkit.junit5.GradleProject
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.generator.gradle.isSuccessful
 import org.assertj.generator.gradle.writeGroovy
 import org.assertj.generator.gradle.writeJava
 import org.gradle.testkit.runner.GradleRunner
 import org.intellij.lang.annotations.Language
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
+import org.junit.jupiter.api.Test
 import java.io.File
-import java.nio.file.Path
-import java.nio.file.Paths
 
 /**
  * Checks that we can include/exclude classes via the `packages` filter.
  */
 internal class PackageFilter {
 
-  @get:Rule
-  val testProjectDir = TemporaryFolder()
+  private val File.helloWorldTestJava: File
+    get() = resolve("src/test/java/org/example/HelloWorldTest.java")
 
-  private lateinit var buildFile: File
-  private lateinit var helloWorldTestJava: File
-  private lateinit var generatedBasePackagePath: Path
+  private val File.generatedBasePackagePath: File
+    get() = resolve("build/generated-src/main-test/java/org/example")
 
-  @Before
-  fun setup() {
-    buildFile = testProjectDir.newFile("build.gradle")
-
-    val srcDir = testProjectDir.newFolder("src", "main", "java")
-
-    val packagePath = Paths.get("org/example/")
-
-    val srcPackagePath = srcDir.toPath().resolve(packagePath)
-    srcPackagePath.toFile().mkdirs()
-    val helloWorldJava = srcPackagePath.resolve("HelloWorld.java").toFile()
-
-    helloWorldJava.writeJava(
-      """
-        package org.example.hello;
-        
-        public final class HelloWorld {
-            
-            // Field
-            public boolean hasSomeBrains = false;
-            
-            // Getter
-            public int getFoo() {
-                return -1;
-            }
-        }
-        """
-    )
-
-    val subHelloWorldJava = srcPackagePath.resolve("sub/SubHelloWorld.java").toFile()
-    subHelloWorldJava.parentFile.mkdirs()
-
-    subHelloWorldJava.writeJava(
-      """
-        package org.example.hello.sub;
-        
-        public final class SubHelloWorld {
-            // Getter
-            public int getFoo() {
-                return -1;
-            }
-        }
-        """
-    )
-
-    val otherWorldJava = srcPackagePath.resolve("OtherWorld.java").toFile()
-
-    otherWorldJava.writeJava(
-      """
-        package org.example.other;
-        
-        public final class OtherWorld {
-            public boolean isBrainy = false;
-        }
-        """
-    )
-
-    val testDir = testProjectDir.newFolder("src", "test", "java")
-
-    testDir.toPath().resolve(packagePath).toFile().mkdirs()
-    val testPackagePath = testDir.toPath().resolve(packagePath)
-    testPackagePath.toFile().mkdirs()
-
-    helloWorldTestJava = testPackagePath.resolve("HelloWorldTest.java").toFile()
-
-    generatedBasePackagePath = testProjectDir.root.toPath()
-      .resolve("build/generated-src/main-test/java")
-      .resolve(packagePath)
-  }
+  private val File.buildFile: File
+    get() = resolve("build.gradle")
 
   @Test
-  fun `include package simple`() {
-    buildFile(
+  @GradleProject("package-filter")
+  fun `include package simple`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile(
       """
         assertJ {
             entryPoints {
@@ -123,18 +55,22 @@ internal class PackageFilter {
         """
     )
 
-    setupTestHelloWorld()
+    root.setupTestHelloWorld()
 
-    runAndAssertBuild()
+    runner.runAndAssertBuild()
 
-    assertThat(generatedBasePackagePath.resolve("hello")).exists()
-    assertThat(generatedBasePackagePath.resolve("other")).doesNotExist()
-    assertThat(generatedBasePackagePath.resolve("hello/sub")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("hello")).exists()
+    assertThat(root.generatedBasePackagePath.resolve("other")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("hello/sub")).doesNotExist()
   }
 
   @Test
-  fun `include package pattern`() {
-    buildFile(
+  @GradleProject("package-filter")
+  fun `include package pattern`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile(
       """
         assertJ {
             entryPoints {
@@ -147,18 +83,22 @@ internal class PackageFilter {
         """
     )
 
-    setupTestHelloWorld()
+    root.setupTestHelloWorld()
 
-    runAndAssertBuild()
+    runner.runAndAssertBuild()
 
-    assertThat(generatedBasePackagePath.resolve("hello")).exists()
-    assertThat(generatedBasePackagePath.resolve("other")).doesNotExist()
-    assertThat(generatedBasePackagePath.resolve("hello/sub")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("hello")).exists()
+    assertThat(root.generatedBasePackagePath.resolve("other")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("hello/sub")).doesNotExist()
   }
 
   @Test
-  fun `include package that does not exist and valid`() {
-    buildFile(
+  @GradleProject("package-filter")
+  fun `include package that does not exist and valid`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile(
       """
         assertJ {
             entryPoints {
@@ -171,18 +111,22 @@ internal class PackageFilter {
         """
     )
 
-    setupTestHelloWorld()
+    root.setupTestHelloWorld()
 
-    runAndAssertBuild()
+    runner.runAndAssertBuild()
 
-    assertThat(generatedBasePackagePath.resolve("hello")).exists()
-    assertThat(generatedBasePackagePath.resolve("other")).doesNotExist()
-    assertThat(generatedBasePackagePath.resolve("hello/sub")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("hello")).exists()
+    assertThat(root.generatedBasePackagePath.resolve("other")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("hello/sub")).doesNotExist()
   }
 
   @Test
-  fun `include package double wildcard`() {
-    buildFile(
+  @GradleProject("package-filter")
+  fun `include package double wildcard`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile(
       """
         assertJ {
             entryPoints {
@@ -195,18 +139,22 @@ internal class PackageFilter {
         """
     )
 
-    setupTestHelloAndSub()
+    root.setupTestHelloAndSub()
 
-    runAndAssertBuild()
+    runner.runAndAssertBuild()
 
-    assertThat(generatedBasePackagePath.resolve("other")).doesNotExist()
-    assertThat(generatedBasePackagePath.resolve("hello")).exists()
-    assertThat(generatedBasePackagePath.resolve("hello/sub")).exists()
+    assertThat(root.generatedBasePackagePath.resolve("other")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("hello")).exists()
+    assertThat(root.generatedBasePackagePath.resolve("hello/sub")).exists()
   }
 
   @Test
-  fun `exclude package simple`() {
-    buildFile(
+  @GradleProject("package-filter")
+  fun `exclude package simple`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile(
       """
         assertJ {
             entryPoints {
@@ -219,18 +167,22 @@ internal class PackageFilter {
         """
     )
 
-    setupTestHelloAndSub()
+    root.setupTestHelloAndSub()
 
-    runAndAssertBuild()
+    runner.runAndAssertBuild()
 
-    assertThat(generatedBasePackagePath.resolve("hello")).exists()
-    assertThat(generatedBasePackagePath.resolve("hello/sub")).exists()
-    assertThat(generatedBasePackagePath.resolve("other")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("hello")).exists()
+    assertThat(root.generatedBasePackagePath.resolve("hello/sub")).exists()
+    assertThat(root.generatedBasePackagePath.resolve("other")).doesNotExist()
   }
 
   @Test
-  fun `exclude package pattern`() {
-    buildFile(
+  @GradleProject("package-filter")
+  fun `exclude package pattern`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile(
       """
         assertJ {
             entryPoints {
@@ -243,16 +195,16 @@ internal class PackageFilter {
         """
     )
 
-    setupTestHelloAndSub()
+    root.setupTestHelloAndSub()
 
-    runAndAssertBuild()
+    runner.runAndAssertBuild()
 
-    assertThat(generatedBasePackagePath.resolve("other")).doesNotExist()
-    assertThat(generatedBasePackagePath.resolve("hello")).exists()
-    assertThat(generatedBasePackagePath.resolve("hello/sub")).exists()
+    assertThat(root.generatedBasePackagePath.resolve("other")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("hello")).exists()
+    assertThat(root.generatedBasePackagePath.resolve("hello/sub")).exists()
   }
 
-  private fun setupTestHelloAndSub() = testFile(
+  private fun File.setupTestHelloAndSub() = testFile(
     """
       @Test
       public void checkHello() {
@@ -269,8 +221,12 @@ internal class PackageFilter {
   )
 
   @Test
-  fun `exclude package that does not exist and valid`() {
-    buildFile(
+  @GradleProject("package-filter")
+  fun `exclude package that does not exist and valid`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile(
       """
         assertJ {
             entryPoints {
@@ -283,7 +239,7 @@ internal class PackageFilter {
         """
     )
 
-    testFile(
+    root.testFile(
       """
         @Test
         public void checkHello() {
@@ -299,16 +255,20 @@ internal class PackageFilter {
         """
     )
 
-    runAndAssertBuild()
+    runner.runAndAssertBuild()
 
-    assertThat(generatedBasePackagePath.resolve("other")).doesNotExist()
-    assertThat(generatedBasePackagePath.resolve("hello")).exists()
-    assertThat(generatedBasePackagePath.resolve("hello/sub")).exists()
+    assertThat(root.generatedBasePackagePath.resolve("other")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("hello")).exists()
+    assertThat(root.generatedBasePackagePath.resolve("hello/sub")).exists()
   }
 
   @Test
-  fun `exclude package double wildcard`() {
-    buildFile(
+  @GradleProject("package-filter")
+  fun `exclude package double wildcard`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile(
       """
         assertJ {
             entryPoints {
@@ -322,14 +282,15 @@ internal class PackageFilter {
     )
 
     // Since we are excluding _everything_ we need to add a custom test
-    helloWorldTestJava.writeJava(
+    root.helloWorldTestJava.writeJava(
       """
         package org.example;
         
         import org.example.hello.*;
-        import org.example.other.*;
-        import org.junit.Test;
-        import static org.assertj.core.api.Assertions.assertThat;
+import org.example.other.*;
+import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
         
         public final class HelloWorldTest {
             @Test
@@ -340,15 +301,19 @@ internal class PackageFilter {
         """
     )
 
-    runAndAssertBuild()
+    runner.runAndAssertBuild()
 
-    assertThat(generatedBasePackagePath.resolve("other")).doesNotExist()
-    assertThat(generatedBasePackagePath.resolve("hello")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("other")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("hello")).doesNotExist()
   }
 
   @Test
-  fun `include double wildcard but exclude specific package`() {
-    buildFile(
+  @GradleProject("package-filter")
+  fun `include double wildcard but exclude specific package`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile(
       """
         assertJ {
             entryPoints {
@@ -362,16 +327,16 @@ internal class PackageFilter {
         """
     )
 
-    setupTestHelloWorld()
+    root.setupTestHelloWorld()
 
-    runAndAssertBuild()
+    runner.runAndAssertBuild()
 
-    assertThat(generatedBasePackagePath.resolve("other")).doesNotExist()
-    assertThat(generatedBasePackagePath.resolve("hello")).exists()
-    assertThat(generatedBasePackagePath.resolve("hello/sub")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("other")).doesNotExist()
+    assertThat(root.generatedBasePackagePath.resolve("hello")).exists()
+    assertThat(root.generatedBasePackagePath.resolve("hello/sub")).doesNotExist()
   }
 
-  private fun setupTestHelloWorld(): File = testFile(
+  private fun File.setupTestHelloWorld(): File = testFile(
     """
       @Test
       public void checkHello() {
@@ -381,19 +346,14 @@ internal class PackageFilter {
       """
   )
 
-  private fun runAndAssertBuild() {
-    val result = GradleRunner.create()
-      .withProjectDir(testProjectDir.root)
-      .withDebug(true)
-      .withPluginClasspath()
-      .withArguments("-i", "-s", "test")
-      .build()
+  private fun GradleRunner.runAndAssertBuild() {
+    val result = withDebug(true).withArguments("-i", "-s", "test").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()
   }
 
-  private fun buildFile(@Language("groovy") configuration: String) {
+  private fun File.buildFile(@Language("groovy") configuration: String) {
     buildFile.writeGroovy(
       """
             // Add required plugins and source sets to the sub projects
@@ -424,7 +384,7 @@ internal class PackageFilter {
     )
   }
 
-  private fun testFile(@Language("java") testContent: String): File {
+  private fun File.testFile(@Language("java") testContent: String): File {
     helloWorldTestJava.writeJava(
       """
             package org.example;

@@ -12,81 +12,25 @@
  */
 package org.assertj.generator.gradle
 
+import net.navatwo.gradle.testkit.junit5.GradleProject
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.generator.gradle.TestUtils.writeDefaultBuildKts
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
-import java.nio.file.Paths
+import org.junit.jupiter.api.Test
+import java.io.File
 
 internal class KotlinSourcesBuild {
-
-  @get:Rule
-  val testProjectDir = TemporaryFolder()
-
   @Test
-  fun `only have kotlin sources`() {
-    testProjectDir.newFile("build.gradle.kts").writeDefaultBuildKts()
-
-    val srcDir = testProjectDir.newFolder("src", "main", "kotlin")
-
-    val packagePath = Paths.get("org/example/")
-
-    val srcPackagePath = srcDir.toPath().resolve(packagePath)
-    srcPackagePath.toFile().mkdirs()
-    val helloWorldKt = srcPackagePath.resolve("HelloWorld2.kt").toFile()
-
-    helloWorldKt.writeKotlin(
-      """
-      package org.example
-      
-      class HelloWorld2 {
-          // Getter & Setter
-          val isBrains = false
-          
-          // Getter
-          val foo = -1
-      }
-      """
-    )
-
-    val testDir = testProjectDir.newFolder("src", "test", "kotlin")
-
-    testDir.toPath().resolve(packagePath).toFile().mkdirs()
-    val testPackagePath = testDir.toPath().resolve(packagePath)
-    testPackagePath.toFile().mkdirs()
-    val helloWorldTestKt = testPackagePath.resolve("HelloWorldTest.kt").toFile()
-
-    helloWorldTestKt.writeKotlin(
-      """
-      package org.example
-      
-      import org.junit.Test
-      import org.example.Assertions.assertThat
-      
-      internal class HelloWorldTest {                
-          @Test
-          fun check() {
-              val hw = HelloWorld2()
-              assertThat(hw).hasFoo(-1)
-                            .isNotBrains()
-          }
-      }
-      """
-    )
-
-    val result = GradleRunner.create()
-      .withProjectDir(testProjectDir.root)
-      .withDebug(true)
-      .withPluginClasspath()
-      .withArguments("-i", "-s", "test")
-      .build()
+  @GradleProject("kotlin-sources-build")
+  fun `only have kotlin sources`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    val result = runner.withArguments("-i", "-s", "test").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()
 
-    val generatedPackagePath = testProjectDir.root.toPath()
+    val generatedPackagePath = root
       .resolve("build/generated-src/main-test/java")
       .resolve("org/example")
 

@@ -12,84 +12,34 @@
  */
 package org.assertj.generator.gradle.parameter
 
+import net.navatwo.gradle.testkit.junit5.GradleProject
 import org.assertj.assertions.generator.AssertionsEntryPointType
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.assertj.generator.gradle.TestUtils.writeBuildFile
 import org.assertj.generator.gradle.isSuccessful
 import org.assertj.generator.gradle.isUpToDate
-import org.assertj.generator.gradle.writeJava
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
+import org.junit.jupiter.api.Test
 import java.io.File
-import java.nio.file.Path
-import java.nio.file.Paths
 
 /**
  * Checks the behaviour of overriding globals in a project
  */
 internal class EntryPointGeneration {
 
-  @get:Rule
-  val testProjectDir = TemporaryFolder()
+  private val File.buildFile: File
+    get() = resolve("build.gradle")
 
-  private lateinit var buildFile: File
-  private lateinit var srcPackagePath: Path
-  private lateinit var packagePath: Path
-
-  @Before
-  fun setup() {
-    buildFile = testProjectDir.newFile("build.gradle")
-
-    val srcDir = testProjectDir.newFolder("src", "main", "java")
-    val testDir = testProjectDir.newFolder("src", "test", "java")
-
-    packagePath = Paths.get("org/example/")
-
-    srcPackagePath = srcDir.toPath().resolve(packagePath)
-    srcPackagePath.toFile().mkdirs()
-    val helloWorldJava = srcPackagePath.resolve("HelloWorld.java").toFile()
-
-    helloWorldJava.writeJava(
-      """
-        package org.example;
-        
-        public final class HelloWorld {
-            // Field
-            public boolean hasSomeBrains = false;
-        }
-        """
-    )
-
-    val testSrcDir = testDir.toPath().resolve(packagePath)
-    testSrcDir.toFile().mkdirs()
-
-    val helloWorldTestJava = testSrcDir.resolve("HelloWorldTest.java")
-    helloWorldTestJava.writeJava(
-      """
-        package org.example;
-        
-        import org.junit.*;
-        
-        public class HelloWorldTest {
-            @Test
-            public void test() {
-              HelloWorld ut = new HelloWorld();
-              HelloWorldAssert.assertThat(ut).doesNotHaveSomeBrains();
-              
-              ut.hasSomeBrains = true;
-              HelloWorldAssert.assertThat(ut).hasSomeBrains();
-            }
-        }
-        """
-    )
-  }
+  private val packagePath: File
+    get() = File("org/example")
 
   @Test
-  fun `change generate from sourceSet`() {
-    buildFile.writeBuildFile(
+  @GradleProject("entry-point-generation")
+  fun `change generate from sourceSet`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile.writeBuildFile(
       """
           sourceSets {
               main {
@@ -105,17 +55,12 @@ internal class EntryPointGeneration {
          """
     )
 
-    val result = GradleRunner.create()
-      .withProjectDir(testProjectDir.root)
-      .withDebug(true)
-      .withPluginClasspath()
-      .withArguments("-i", "-s", "test")
-      .build()
+    val result = runner.withArguments("-i", "-s", "test").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()
 
-    val generatedPackage = testProjectDir.root.toPath()
+    val generatedPackage = root
       .resolve("build/generated-src/main-test/java")
       .resolve(packagePath)
     val files = listOf(
@@ -132,8 +77,12 @@ internal class EntryPointGeneration {
   }
 
   @Test
-  fun `change generate from global`() {
-    buildFile.writeBuildFile(
+  @GradleProject("entry-point-generation")
+  fun `change generate from global`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile.writeBuildFile(
       """
         sourceSets {
             main {
@@ -145,17 +94,12 @@ internal class EntryPointGeneration {
         """
     )
 
-    val result = GradleRunner.create()
-      .withProjectDir(testProjectDir.root)
-      .withDebug(true)
-      .withPluginClasspath()
-      .withArguments("-i", "-s", "test")
-      .build()
+    val result = runner.withArguments("-i", "-s", "test").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()
 
-    val generatedPackage = testProjectDir.root.toPath()
+    val generatedPackage = root
       .resolve("build/generated-src/main-test/java")
       .resolve(packagePath)
     val files = listOf(
@@ -172,8 +116,12 @@ internal class EntryPointGeneration {
   }
 
   @Test
-  fun `change entry point package`() {
-    buildFile.writeBuildFile(
+  @GradleProject("entry-point-generation")
+  fun `change entry point package`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile.writeBuildFile(
       """
         sourceSets {
             main {
@@ -190,18 +138,12 @@ internal class EntryPointGeneration {
         """
     )
 
-    val result = GradleRunner.create()
-      .withProjectDir(testProjectDir.root)
-      .withDebug(true)
-      .withPluginClasspath()
-      .withArguments("-i", "-s", "test")
-      .build()
+    val result = runner.withArguments("-i", "-s", "test").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()
 
-    val generatedSrcDir = testProjectDir.root.toPath()
-      .resolve("build/generated-src/main-test/java")
+    val generatedSrcDir = root.resolve("build/generated-src/main-test/java")
 
     val generatedPackageDir = generatedSrcDir.resolve(packagePath)
     val otherPackageDir = generatedSrcDir.resolve("org/other/")
@@ -211,8 +153,12 @@ internal class EntryPointGeneration {
   }
 
   @Test
-  fun `change entry point package and entry points`() {
-    buildFile.writeBuildFile(
+  @GradleProject("entry-point-generation")
+  fun `change entry point package and entry points`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile.writeBuildFile(
       """
         sourceSets {
             main {
@@ -229,19 +175,14 @@ internal class EntryPointGeneration {
         """
     )
 
-    val runner = GradleRunner.create()
-      .withProjectDir(testProjectDir.root)
-      .withDebug(true)
-      .withPluginClasspath()
-      .withArguments("-i", "-s", "test")
+    val testRunner = runner.withArguments("-i", "-s", "test")
 
-    val result = runner.build()
+    val result = testRunner.build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()
 
-    val generatedSrcDir = testProjectDir.root.toPath()
-      .resolve("build/generated-src/main-test/java")
+    val generatedSrcDir = root.resolve("build/generated-src/main-test/java")
 
     val generatedPackageDir = generatedSrcDir.resolve(packagePath)
     val otherPackageDir = generatedSrcDir.resolve("org/other/")
@@ -250,7 +191,7 @@ internal class EntryPointGeneration {
     assertThat(otherPackageDir.resolve("BddAssertions.java")).exists()
 
     // Run it again, there may be issues with serialization
-    val result2 = runner.build()
+    val result2 = testRunner.build()
 
     assertThat(result2.task(":generateAssertJ")).isUpToDate()
     assertThat(result2.task(":test")).isUpToDate()

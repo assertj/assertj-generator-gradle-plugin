@@ -12,77 +12,31 @@
  */
 package org.assertj.generator.gradle.parameter
 
+import net.navatwo.gradle.testkit.junit5.GradleProject
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.assertj.generator.gradle.TestUtils.writeBuildFile
 import org.assertj.generator.gradle.isSuccessful
-import org.assertj.generator.gradle.writeJava
 import org.gradle.configurationcache.extensions.capitalized
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
+import org.junit.jupiter.api.Test
 import java.io.File
-import java.nio.file.Path
-import java.nio.file.Paths
 
 /**
  * Checks the behaviour of overriding globals in a project
  */
 internal class SkipParameter {
-
-  @get:Rule
-  val testProjectDir = TemporaryFolder()
-
-  private lateinit var buildFile: File
-  private lateinit var mainPackagePath: Path
-  private lateinit var otherPackagePath: Path
-  private lateinit var packagePath: Path
-
-  @Before
-  fun setup() {
-    buildFile = testProjectDir.newFile("build.gradle")
-
-    val srcDir = testProjectDir.newFolder("src")
-    val mainDir = srcDir.toPath().resolve("main/java")
-    val otherDir = srcDir.toPath().resolve("other/java")
-
-    packagePath = Paths.get("org/example/")
-
-    mainPackagePath = mainDir.resolve(packagePath)
-    mainPackagePath.toFile().mkdirs()
-    val mainJava = mainPackagePath.resolve("Main.java").toFile()
-
-    mainJava.writeJava(
-      """
-       package org.example;
-       
-       public final class Main {
-           // Field
-           public boolean hasSomeBrains = false;
-       }
-       """
-    )
-
-    otherPackagePath = otherDir.resolve(packagePath)
-    otherPackagePath.toFile().mkdirs()
-    val otherJava = otherPackagePath.resolve("Other.java").toFile()
-
-    otherJava.writeJava(
-      """
-         package org.example;
-         
-         public final class Other {
-             // Field
-             public boolean hasSomeBrains = false;
-         }
-         """
-    )
-  }
+  private val File.buildFile: File
+    get() = resolve("build.gradle")
+  private val packagePath: File
+    get() = File("org/example")
 
   @Test
-  fun `skip other set`() {
-    buildFile.writeBuildFile(
+  @GradleProject("skip-parameter")
+  fun `skip other set`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile.writeBuildFile(
       """
         sourceSets {
             main {
@@ -92,22 +46,21 @@ internal class SkipParameter {
         """
     )
 
-    val result = GradleRunner.create()
-      .withProjectDir(testProjectDir.root)
-      .withDebug(true)
-      .withPluginClasspath()
-      .withArguments("-i", "-s", "build")
-      .build()
+    val result = runner.withArguments("-i", "-s", "build").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":build")).isSuccessful()
 
-    assertFiles(false)
+    root.assertFiles(false)
   }
 
   @Test
-  fun `generate default`() {
-    buildFile.writeBuildFile(
+  @GradleProject("skip-parameter")
+  fun `generate default`(
+    @GradleProject.Root root: File,
+    @GradleProject.Runner runner: GradleRunner,
+  ) {
+    root.buildFile.writeBuildFile(
       """
         sourceSets {
             main {
@@ -117,31 +70,25 @@ internal class SkipParameter {
         """
     )
 
-    val result = GradleRunner.create()
-      .withProjectDir(testProjectDir.root)
-      .withDebug(true)
-      .withPluginClasspath()
-      .withArguments("-i", "-s", "test")
-      .build()
+    val result = runner.withArguments("-i", "-s", "test").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()
 
-    assertFiles(true)
+    root.assertFiles(true)
   }
 
-  private fun assertFiles(exists: Boolean) {
+  private fun File.assertFiles(exists: Boolean) {
     val sourceSet = "main"
-    val generatedPackagePath = testProjectDir.root.toPath()
-      .resolve("build/generated-src/main-test/java")
+    val generatedPackagePath = resolve("build/generated-src/main-test/java")
       .resolve(packagePath)
 
-    val buildPath = testProjectDir.root.toPath().resolve("build")
+    val buildPath = resolve("build")
 
     val path = generatedPackagePath.resolve("${sourceSet.capitalized()}Assert.java")
 
-    assertThat(path.toFile().exists())
-      .`as` { "$sourceSet file: ${buildPath.relativize(path)} exists" }
+    assertThat(path.exists())
+      .`as` { "$sourceSet file: ${buildPath.toPath().relativize(path.toPath())} exists" }
       .isEqualTo(exists)
   }
 }
