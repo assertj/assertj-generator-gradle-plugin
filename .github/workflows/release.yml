@@ -12,7 +12,7 @@ jobs:
           java-version: 17
           distribution: 'temurin'
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Given we are doing a release, lets make sure we have a safe gradle install
       - uses: gradle/wrapper-validation-action@v1
