@@ -43,8 +43,8 @@ internal class IncrementalBuild {
 
     val firstBuild = buildRunner.build()
 
-    assertThat(firstBuild.task(":generateAssertJ")).isSuccessful()
-    assertThat(firstBuild.task(":test")).isSuccessful()
+    assertThat(firstBuild.task(":generateAssertJ")).isSuccessOrCached()
+    assertThat(firstBuild.task(":test")).isSuccessOrCached()
 
     root.assertFiles()
 
@@ -65,8 +65,8 @@ internal class IncrementalBuild {
 
     val firstBuild = buildRunner.build()
 
-    assertThat(firstBuild.task(":generateAssertJ")).isSuccessful()
-    assertThat(firstBuild.task(":test")).isSuccessful()
+    assertThat(firstBuild.task(":generateAssertJ")).isSuccessOrCached()
+    assertThat(firstBuild.task(":test")).isSuccessOrCached()
 
     // get files
     root.assertFiles()

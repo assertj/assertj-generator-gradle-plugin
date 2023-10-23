@@ -28,7 +28,7 @@ internal class SkipPackageInfo {
       .resolve("org/example")
 
   @Test
-  @GradleProject("simple-build")
+  @GradleProject("skip-package-info")
   fun `does not include package info file`(
     @GradleProject.Root root: File,
     @GradleProject.Runner runner: GradleRunner,

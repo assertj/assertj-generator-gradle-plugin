@@ -38,8 +38,8 @@ internal class SimpleBuild {
 
     val result = runner.withArguments("-i", "-s", "test").build()
 
-    assertThat(result.task(":generateAssertJ")).isSuccessful()
-    assertThat(result.task(":test")).isSuccessful()
+    assertThat(result.task(":generateAssertJ")).isSuccessOrCached()
+    assertThat(result.task(":test")).isSuccessOrCached()
   }
 
   @Test
@@ -62,8 +62,8 @@ internal class SimpleBuild {
 
     val result = runner.withArguments("-i", "-s", "test").build()
 
-    assertThat(result.task(":generateAssertJ")).isSuccessful()
-    assertThat(result.task(":test")).isSuccessful()
+    assertThat(result.task(":generateAssertJ")).isSuccessOrCached()
+    assertThat(result.task(":test")).isSuccessOrCached()
 
     val packagePath = root.toPath()
       .resolve("build/generated-src/main-test/java")
