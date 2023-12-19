@@ -68,7 +68,7 @@ dependencies {
   api("org.assertj:assertj-assertions-generator:2.2.1")
 
   implementation(gradleKotlinDsl())
-  implementation("com.google.guava:guava:32.1.3-jre")
+  implementation("com.google.guava:guava:33.0.0-jre")
 
   val kotlinVersion = "1.6.21"
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
