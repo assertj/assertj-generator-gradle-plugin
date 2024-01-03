@@ -80,7 +80,7 @@ dependencies {
   testImplementation(gradleTestKit())
 
   val junitVersion = "5.10.1"
-  testImplementation("org.assertj:assertj-core:3.25.0")
+  testImplementation("org.assertj:assertj-core:3.25.1")
   testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
   testImplementation("net.navatwo:gradle-plugin-better-testing-junit5:0.0.0")
 
