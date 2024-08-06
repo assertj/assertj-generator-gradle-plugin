@@ -5,7 +5,7 @@ import com.gradle.publish.PublishTask.GRADLE_PUBLISH_SECRET_ENV
 
 plugins {
   id("java-gradle-plugin")
-  id("org.jetbrains.kotlin.jvm") version "2.0.0"
+  id("org.jetbrains.kotlin.jvm") version "2.0.10"
 
   id("io.gitlab.arturbosch.detekt") version "1.23.6"
   id("com.autonomousapps.dependency-analysis") version "1.32.0"
