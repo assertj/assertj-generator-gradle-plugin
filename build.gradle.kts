@@ -8,7 +8,7 @@ plugins {
   id("org.jetbrains.kotlin.jvm") version "2.0.20"
 
   id("io.gitlab.arturbosch.detekt") version "1.23.7"
-  id("com.autonomousapps.dependency-analysis") version "2.1.2"
+  id("com.autonomousapps.dependency-analysis") version "2.1.4"
 
   id("com.gradle.plugin-publish") version "1.2.2"
 }
