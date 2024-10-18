@@ -10,7 +10,7 @@ plugins {
   id("io.gitlab.arturbosch.detekt") version "1.23.7"
   id("com.autonomousapps.dependency-analysis") version "2.2.0"
 
-  id("com.gradle.plugin-publish") version "1.2.2"
+  id("com.gradle.plugin-publish") version "1.3.0"
 }
 
 val setupPluginUpload by tasks.registering {
