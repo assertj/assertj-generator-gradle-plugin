@@ -74,7 +74,7 @@ dependencies {
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin-api:$kotlinVersion")
 
-  testCompileOnly("org.jetbrains:annotations:26.0.1")
+  testCompileOnly("org.jetbrains:annotations:26.0.2")
 
   testImplementation(localGroovy())
   testImplementation(gradleTestKit())
