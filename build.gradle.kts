@@ -7,7 +7,7 @@ plugins {
   id("java-gradle-plugin")
   id("org.jetbrains.kotlin.jvm") version "2.0.21"
 
-  id("io.gitlab.arturbosch.detekt") version "1.23.7"
+  id("io.gitlab.arturbosch.detekt") version "1.23.8"
   id("com.autonomousapps.dependency-analysis") version "2.2.0"
 
   id("com.gradle.plugin-publish") version "1.3.1"
