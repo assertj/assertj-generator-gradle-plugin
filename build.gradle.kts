@@ -41,7 +41,7 @@ version = "2.2.0-SNAPSHOT"
 java {
   toolchain {
     languageVersion = JavaLanguageVersion.of(21)
-    vendor = JvmVendorSpec.AZUL
+    vendor = JvmVendorSpec.ADOPTIUM
   }
 }
 
