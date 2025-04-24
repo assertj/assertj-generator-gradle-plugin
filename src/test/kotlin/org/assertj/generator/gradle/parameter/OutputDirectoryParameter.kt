@@ -15,6 +15,7 @@ package org.assertj.generator.gradle.parameter
 import net.navatwo.gradle.testkit.junit5.GradleProject
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.assertj.generator.gradle.TestUtils.writeBuildFile
+import org.assertj.generator.gradle.capitalized
 import org.assertj.generator.gradle.isSuccessful
 import org.gradle.configurationcache.extensions.capitalized
 import org.gradle.testkit.runner.GradleRunner

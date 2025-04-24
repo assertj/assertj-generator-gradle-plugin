@@ -38,6 +38,13 @@ tasks.named("publishPlugins") {
 group = "org.assertj"
 version = "2.2.0-SNAPSHOT"
 
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+    vendor = JvmVendorSpec.AZUL
+  }
+}
+
 gradlePlugin {
   website.set("https://github.com/assertj/assertj-generator-gradle-plugin")
   vcsUrl.set("https://github.com/assertj/assertj-generator-gradle-plugin.git")
