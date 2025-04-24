@@ -8,13 +8,13 @@ jobs:
 
     strategy:
       matrix:
-        gradle-version: [ '7.6.4', '8.7', '8.12.1', 'latest' ]
+        gradle-version: [ '7.6.4', '8.7', '8.12.1', 'current' ]
 
     steps:
       - uses: actions/setup-java@v4
         with:
-          java-version: 17
-          distribution: 'temurin'
+          java-version: 21
+          distribution: 'azul'
 
       - uses: actions/checkout@v4
 
