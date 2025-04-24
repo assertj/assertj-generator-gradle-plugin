@@ -98,6 +98,8 @@ tasks.test {
   useJUnitPlatform()
 
   jvmArgs("-Djunit.jupiter.extensions.autodetection.enabled=true")
+
+  systemProperty("test.gradle.version", gradle.gradleVersion)
 }
 
 sourceSets {

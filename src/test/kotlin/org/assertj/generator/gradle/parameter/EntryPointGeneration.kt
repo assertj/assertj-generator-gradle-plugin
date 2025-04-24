@@ -18,6 +18,7 @@ import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.assertj.generator.gradle.TestUtils.writeBuildFile
 import org.assertj.generator.gradle.isSuccessful
 import org.assertj.generator.gradle.isUpToDate
+import org.assertj.generator.gradle.TestUtils.withCiGradle
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -55,7 +56,7 @@ internal class EntryPointGeneration {
          """
     )
 
-    val result = runner.withArguments("-i", "-s", "test").build()
+    val result = runner.withCiGradle().withArguments("-i", "-s", "test").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()

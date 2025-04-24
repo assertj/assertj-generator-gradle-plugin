@@ -14,6 +14,7 @@ package org.assertj.generator.gradle
 
 import net.navatwo.gradle.testkit.junit5.GradleProject
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.generator.gradle.TestUtils.withCiGradle
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -39,7 +40,7 @@ internal class IncrementalBuild {
     @GradleProject.Root root: File,
     @GradleProject.Runner runner: GradleRunner,
   ) {
-    val buildRunner = runner.withArguments("-i", "-s", "build")
+    val buildRunner = runner.withCiGradle().withArguments("-i", "-s", "build")
 
     val firstBuild = buildRunner.build()
 
@@ -61,7 +62,7 @@ internal class IncrementalBuild {
     @GradleProject.Root root: File,
     @GradleProject.Runner runner: GradleRunner,
   ) {
-    val buildRunner = runner.withArguments("-i", "-s", "build")
+    val buildRunner = runner.withCiGradle().withArguments("-i", "-s", "build")
 
     val firstBuild = buildRunner.build()
 

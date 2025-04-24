@@ -17,7 +17,7 @@ import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.assertj.generator.gradle.TestUtils.writeBuildFile
 import org.assertj.generator.gradle.capitalized
 import org.assertj.generator.gradle.isSuccessful
-import org.gradle.configurationcache.extensions.capitalized
+import org.assertj.generator.gradle.TestUtils.withCiGradle
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -51,7 +51,10 @@ internal class OutputDirectoryParameter {
         """
     )
 
-    val result = runner.withArguments("-i", "-s", "test").build()
+    val result = runner
+      .withCiGradle()
+      .withArguments("-i", "-s", "test")
+      .build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()
