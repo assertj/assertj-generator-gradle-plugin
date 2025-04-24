@@ -12,6 +12,7 @@
  */
 package org.assertj.generator.gradle
 
+import org.gradle.testkit.runner.GradleRunner
 import org.intellij.lang.annotations.Language
 import java.io.File
 
@@ -76,5 +77,12 @@ internal object TestUtils {
     )
   }
 
-  fun File.writeDefaultBuildKts(): Unit = this.writeBuildKts("")
+  fun GradleRunner.withCiGradle(): GradleRunner {
+    return withGradleVersion(
+      System.getProperty(
+        "test.gradle.version.override",
+        System.getProperty("test.gradle.version")
+      )
+    )
+  }
 }

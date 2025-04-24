@@ -14,6 +14,7 @@ package org.assertj.generator.gradle.parameter
 
 import net.navatwo.gradle.testkit.junit5.GradleProject
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.generator.gradle.TestUtils.withCiGradle
 import org.assertj.generator.gradle.isSuccessful
 import org.assertj.generator.gradle.writeGroovy
 import org.assertj.generator.gradle.writeJava
@@ -77,7 +78,7 @@ internal class ClassesFilter {
 
     root.setupTestHelloWorld()
 
-    runner.runAndAssertBuild()
+    runner.withCiGradle().runAndAssertBuild()
 
     assertThat(root.generatedBasePackagePath.resolve("hello")).exists()
     assertThat(root.generatedBasePackagePath.resolve("other")).doesNotExist()

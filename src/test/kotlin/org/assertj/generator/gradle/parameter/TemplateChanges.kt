@@ -14,6 +14,7 @@ package org.assertj.generator.gradle.parameter
 
 import net.navatwo.gradle.testkit.junit5.GradleProject
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
+import org.assertj.generator.gradle.TestUtils.withCiGradle
 import org.assertj.generator.gradle.TestUtils.writeBuildFile
 import org.assertj.generator.gradle.isSuccessful
 import org.assertj.generator.gradle.isUpToDate
@@ -58,7 +59,7 @@ internal class TemplateChanges {
         """
     )
 
-    val result = runner.withArguments("-i", "-s", "test").build()
+    val result = runner.withCiGradle().withArguments("-i", "-s", "test").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()
@@ -90,7 +91,7 @@ internal class TemplateChanges {
       """
     )
 
-    val testRunner = runner.withArguments("-i", "-s", "test")
+    val testRunner = runner.withCiGradle().withArguments("-i", "-s", "test")
 
     val result = testRunner.build()
 
@@ -124,7 +125,7 @@ internal class TemplateChanges {
       """
     )
 
-    val testRunner = runner.withArguments("-i", "-s", "test")
+    val testRunner = runner.withCiGradle().withArguments("-i", "-s", "test")
 
     val result = testRunner.build()
 
@@ -163,7 +164,7 @@ internal class TemplateChanges {
         """
     )
 
-    val testRunner = runner.withArguments("-i", "-s", "test")
+    val testRunner = runner.withCiGradle().withArguments("-i", "-s", "test")
 
     val result = testRunner.build()
 
@@ -221,7 +222,7 @@ internal class TemplateChanges {
         """
     )
 
-    val testRunner = runner.withArguments("-i", "-s", "test")
+    val testRunner = runner.withCiGradle().withArguments("-i", "-s", "test")
 
     val result = testRunner.build()
 
@@ -290,7 +291,7 @@ internal class TemplateChanges {
         """
     )
 
-    val testRunner = runner.withArguments("-i", "-s", "test")
+    val testRunner = runner.withCiGradle().withArguments("-i", "-s", "test")
 
     val result = testRunner.build()
 
@@ -334,7 +335,7 @@ internal class TemplateChanges {
         """
     )
 
-    val result = runner.withArguments("-i", "-s", "generateAssertJ").buildAndFail()
+    val result = runner.withCiGradle().withArguments("-i", "-s", "generateAssertJ").buildAndFail()
 
     assertThat(result.output).contains("wholeNumberAssertion")
   }

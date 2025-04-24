@@ -14,6 +14,7 @@ package org.assertj.generator.gradle
 
 import net.navatwo.gradle.testkit.junit5.GradleProject
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.generator.gradle.TestUtils.withCiGradle
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -25,7 +26,7 @@ internal class KotlinSourcesBuild {
     @GradleProject.Root root: File,
     @GradleProject.Runner runner: GradleRunner,
   ) {
-    val result = runner.withArguments("-i", "-s", "test").build()
+    val result = runner.withCiGradle().withArguments("-i", "-s", "test").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()

@@ -14,6 +14,7 @@ package org.assertj.generator.gradle
 
 import net.navatwo.gradle.testkit.junit5.GradleProject
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.generator.gradle.TestUtils.withCiGradle
 import org.assertj.generator.gradle.TestUtils.writeBuildFile
 import org.assertj.generator.gradle.TestUtils.writeDefaultBuildFile
 import org.gradle.testkit.runner.GradleRunner
@@ -36,7 +37,7 @@ internal class SimpleBuild {
   ) {
     root.buildFile.writeDefaultBuildFile()
 
-    val result = runner.withArguments("-i", "-s", "test").build()
+    val result = runner.withCiGradle().withArguments("-i", "-s", "test").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()
@@ -60,7 +61,7 @@ internal class SimpleBuild {
       """
     )
 
-    val result = runner.withArguments("-i", "-s", "test").build()
+    val result = runner.withCiGradle().withArguments("-i", "-s", "test").build()
 
     assertThat(result.task(":generateAssertJ")).isSuccessful()
     assertThat(result.task(":test")).isSuccessful()
