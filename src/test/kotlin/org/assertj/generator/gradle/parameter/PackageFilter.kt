@@ -14,8 +14,8 @@ package org.assertj.generator.gradle.parameter
 
 import net.navatwo.gradle.testkit.junit5.GradleProject
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.generator.gradle.isSuccessful
 import org.assertj.generator.gradle.TestUtils.withCiGradle
+import org.assertj.generator.gradle.isSuccessful
 import org.assertj.generator.gradle.writeGroovy
 import org.assertj.generator.gradle.writeJava
 import org.gradle.testkit.runner.GradleRunner

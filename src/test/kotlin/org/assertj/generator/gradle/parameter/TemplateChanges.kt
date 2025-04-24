@@ -14,10 +14,10 @@ package org.assertj.generator.gradle.parameter
 
 import net.navatwo.gradle.testkit.junit5.GradleProject
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
+import org.assertj.generator.gradle.TestUtils.withCiGradle
 import org.assertj.generator.gradle.TestUtils.writeBuildFile
 import org.assertj.generator.gradle.isSuccessful
 import org.assertj.generator.gradle.isUpToDate
-import org.assertj.generator.gradle.TestUtils.withCiGradle
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Test
 import java.io.File
