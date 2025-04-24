@@ -20,9 +20,9 @@ jobs:
 
       - uses: gradle/wrapper-validation-action@v3
 
-      - uses: gradle/gradle-build-action@v3
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: ${{ matrix.gradle-version }}
-          arguments: check --continue
 
-#    TODO Add publish on tag support
+      - run:
+          ./gradlew check --continue
