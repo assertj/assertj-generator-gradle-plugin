@@ -6,10 +6,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
 
-    strategy:
-      matrix:
-        gradle-version: [ '7.6.2', '8.0.1', '8.2.1' ]
-
     steps:
       - uses: actions/setup-java@v4
         with:
@@ -22,7 +18,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: ${{ matrix.gradle-version }}
+          gradle-version: '8.12.1'
 
       - run:
           ./gradlew check --continue
